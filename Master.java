@@ -24,7 +24,14 @@ public class Master {
         ServerSocket ss = new ServerSocket(port);
         System.out.println("ServerSocket in ascolto sulla porta " + port + "...");
         Socket socket = ss.accept(); //accetta una connessione in ingresso
-        System.out.println("Client connesso!");
+   System.out.println("Client connesso!");
+
+        // Leggi e stampa i messaggi dal client
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String line;
+        while ((line = in.readLine()) != null) {
+            System.out.println("Messaggio dal client: " + line);
+        }
 
         socket.close();
         ss.close();

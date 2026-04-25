@@ -1,2 +1,2 @@
-# labso_
+# labso_bgz
 progetto sistemi operativi

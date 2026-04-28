@@ -1,12 +1,17 @@
 package client;
 
+import client.comandi.listDataLocal;//test chiamata classe da un altra cartella
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.Map;
 import java.util.Scanner;
 
+
 public class ComandiClient extends Thread {
+
     public BufferedReader inServer;
     public PrintWriter outServer;
     public String nomeMacchina;
@@ -18,7 +23,10 @@ public class ComandiClient extends Thread {
     private volatile boolean secondowhile = false;
     public ChiusuraSocket chiusura;
     public Socket socket;
-    public ComandiClient(BufferedReader inServer, PrintWriter outServer, String nomeMacchina, Scanner sc, String stato, String ip, int porta, ChiusuraSocket chiusura, Socket socket) {
+    public Map<String,String> datiRilevazione;
+
+
+    public ComandiClient(BufferedReader inServer, PrintWriter outServer, String nomeMacchina, Scanner sc, String stato, String ip, int porta, ChiusuraSocket chiusura, Socket socket, Map<String,String> datiRilevazione) {
         this.nomeMacchina = nomeMacchina;
         this.inServer = inServer;
         this.outServer = outServer;
@@ -28,6 +36,7 @@ public class ComandiClient extends Thread {
         this.porta =porta;
         this.chiusura=chiusura;
         this.socket=socket;
+        this.datiRilevazione= datiRilevazione;
     }
     
     @Override
@@ -57,6 +66,7 @@ public class ComandiClient extends Thread {
                         System.out.println("[OK] Nome valido. Invio credenziali: " + ip + " " + porta);
                         outServer.println(ip +" "+porta);
                         primowhile = false;
+                        secondowhile = true;
                         System.out.println("[DEBUG] Registrazione completata con successo.");
                     }
                     
@@ -95,9 +105,12 @@ public class ComandiClient extends Thread {
             String comando = sc.nextLine();
             if(comando.contains("listdata local")){
                 //accedere alle registrazioniu locali
-
-
-                //INIZIO TEST per vedere se la chiusura del programma avviene se il socket viene chiuso dal server 
+                    listDataLocal listalocale = new listDataLocal();
+                    listalocale.mostraLista(datiRilevazione);
+                /**
+                 * 
+                 * 
+                 *                 //INIZIO TEST per vedere se la chiusura del programma avviene se il socket viene chiuso dal server 
                 outServer.println(comando);
                 String response;
                 try {
@@ -109,6 +122,14 @@ public class ComandiClient extends Thread {
                         chiusura.chiusuraConnessioneThreadComando(socket,primowhile,secondowhile);
                 }
                 //FINE TEST
+                 * 
+                 * 
+                 * 
+                 * 
+                 * 
+                 */
+
+
 
 
 

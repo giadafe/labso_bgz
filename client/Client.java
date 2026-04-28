@@ -1,7 +1,9 @@
 package client;
 import java.io.*;
 import java.net.*;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.concurrent.ConcurrentHashMap;
 //recarsi nella cartella src e lanciare il comando:
 // javac Client.java
 // poi per eseguire il client:
@@ -14,10 +16,17 @@ public class Client {
         //istanziamento delle classi e oggetti
         Scanner sc = new Scanner(System.in);
         Credenziale credenziale = new Credenziale(); // classe che si occupa di recuperare le credenzaili
-        SalvaggioDati salvataggio = new SalvaggioDati();// classe che si occupa di salvare le credenzaili 
+        SalvaggioDati salvataggio = new SalvaggioDati();// classe che si occupa di salvare le credenzaili in locale
         ControlloDirectory controlloDirectory = new ControlloDirectory();//classe che si occupa di controllare le directory del progetto
         ChiusuraSocket chiusura = new ChiusuraSocket(); //classe che si occupa di chiudere il socket thread e programma
+
         controlloDirectory.controlloDirectoryRilevazioni();
+
+        //creazione struttura dati condivisa thread safe
+
+        Map<String,String> datiRilevazione  = new ConcurrentHashMap<>();
+        RecuperoDatiRilevazioni recuperoRilevazioni = new RecuperoDatiRilevazioni(datiRilevazione);
+        recuperoRilevazioni.caricamentoLista();// carico la lista di rilevazioni locali nella struttura dati
 
 
         //creazione varaibili
@@ -68,7 +77,7 @@ public class Client {
             System.out.println("Sei connesso al master");
 
             //avvio del thread dei comandi
-            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, porta, chiusura, socket);
+            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, porta, chiusura, socket, datiRilevazione);
             comandi.start();
             //avvio del server per effettuare la connessione P2P
             ServerRilevazioni serverRilevazioni = new ServerRilevazioni(portaAggregator,inServer,outServer);

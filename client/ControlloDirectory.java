@@ -11,6 +11,7 @@ public class ControlloDirectory {
         File directory = new File("client/rilevazioni");
         File fileNomeMacchina = new File(directory, "nomeMacchina.txt");
         File fileRilevazioni = new File(directory, "rilevazioni.txt");
+        File fileToken = new File(directory,"token.txt");
 
         //check cartella
         if(!directory.exists()){
@@ -34,10 +35,17 @@ public class ControlloDirectory {
         }
 
         //check file rilevazioni
-
         if(!fileRilevazioni.exists()){
             try{
                 fileRilevazioni.createNewFile();
+            }catch(IOException err){
+                System.out.println("Errore nella creazione delfile ");
+            }
+        }
+
+        if(!fileToken.exists()){
+            try{
+                fileToken.createNewFile();
             }catch(IOException err){
                 System.out.println("Errore nella creazione delfile ");
             }

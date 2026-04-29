@@ -25,7 +25,8 @@ public class Client {
         //creazione struttura dati condivisa thread safe
 
         Map<String,String> datiRilevazione  = new ConcurrentHashMap<>();
-        RecuperoDatiRilevazioni recuperoRilevazioni = new RecuperoDatiRilevazioni(datiRilevazione);
+        Map<String,String> tokenSblocco  = new ConcurrentHashMap<>();
+        RecuperoDatiRilevazioni recuperoRilevazioni = new RecuperoDatiRilevazioni(datiRilevazione,tokenSblocco);
         recuperoRilevazioni.caricamentoLista();// carico la lista di rilevazioni locali nella struttura dati
 
 

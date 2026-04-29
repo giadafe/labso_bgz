@@ -1,5 +1,6 @@
 package client;
 
+import client.comandi.Add;
 import client.comandi.listDataLocal;//test chiamata classe da un altra cartella
 
 import java.io.BufferedReader;
@@ -110,7 +111,7 @@ public class ComandiClient extends Thread {
                 /**
                  * 
                  * 
-                 *                 //INIZIO TEST per vedere se la chiusura del programma avviene se il socket viene chiuso dal server 
+                //INIZIO TEST per vedere se la chiusura del programma avviene se il socket viene chiuso dal server 
                 outServer.println(comando);
                 String response;
                 try {
@@ -137,6 +138,9 @@ public class ComandiClient extends Thread {
                 //fare una get al server
             }else if(comando.contains("add")){
                 //aggiugnere registraizone + valore tutto in String
+                String scomposizioneComando [] = comando.split(" ",3);// salvo in blocchi di 3 le stringhe 
+                Add addRilevazioni = new Add(scomposizioneComando,inServer,outServer, datiRilevazione);
+                addRilevazioni.addRilevazione();
             }else if(comando.contains("download")){
                 //implementare la crittografia AES, usare la chiave per sbloccare il cyphertext
                 //mandare il nome e la chiave al master
@@ -145,6 +149,6 @@ public class ComandiClient extends Thread {
             }else{
                 System.out.println("comando inserito sbagliato");
             }
-        }
+        }  
     }
 }

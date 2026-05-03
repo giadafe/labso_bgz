@@ -27,6 +27,12 @@ public class Master {
 			return;
 		}
 
+		//creazione di una hasmap per salvare il nome della macchina, ip e porta
+		HashMap<String, String> infoMacchinaClient = new HashMap<>();
+
+		//creazione hashmap per le rilevazioni CHIAVE PRIMARIA nome risorsa
+		HashMap<String, String> infoRilevazioni = new HashMap<>();
+
 		// Creazione del ServerSocket
 		ServerSocket ss = new ServerSocket(port);
 		System.out.println("ServerSocket in ascolto sulla porta " + port + "...");
@@ -41,8 +47,19 @@ public class Master {
 				Socket socket = ss.accept(); // accetta una connessione in ingresso
 				System.out.println("Client connesso!");
 
+				// preparazione dei BufferedReader e BufferedWriter per permettere al Master di leggere e
+				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 				
+				//Fase di avvio del thread per la gestione delle richieste dei client peer
+				//DA CREARE GESTIONE CLIENT.JAVA
+				GestioneClient ThreadRichieste = new GestioneClient(socket, in, out, infoMacchinaClient, infoRilevazioni
+				//,gestoreLog DA IMPLEMENTARE IL COMANDO
+				); 
+				
+				ThreadRichieste.start();
 			}
+
 		} catch (SocketException e) {
 			System.out.println("Server terminato: " + e.getMessage());
 		}

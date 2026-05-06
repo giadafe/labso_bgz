@@ -3,10 +3,10 @@ package client.comandi;
 import java.io.PrintWriter;
 import java.util.Map;
 
-/**
- * Classe dedicata alla registrazione automatica delle risorse locali 
- * presso l'Aggregator subito dopo l'autenticazione.
- */
+
+ // Classe dedicata alla registrazione automatica delle risorse locali 
+ // presso l'Aggregator subito dopo l'autenticazione.
+
 public class InvioRilevazioni {
 
     public void invia(PrintWriter outServer, Map<String, String> datiRilevazione) {
@@ -28,10 +28,10 @@ public class InvioRilevazioni {
 import java.io.PrintWriter;
 import java.util.Map;
 
-/**
- * Classe dedicata alla registrazione automatica delle risorse locali 
- * presso l'Aggregator subito dopo l'autenticazione.
- */
+
+ // Classe dedicata alla registrazione automatica delle risorse locali 
+ // presso l'Aggregator subito dopo l'autenticazione.
+
 public class RegistrazioneRisorse {
 
     public void invia(PrintWriter outServer, Map<String, String> datiRilevazione) {

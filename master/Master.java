@@ -31,7 +31,7 @@ public class Master {
 		HashMap<String, String> infoMacchinaClient = new HashMap<>();
 
 		//creazione hashmap per le rilevazioni CHIAVE PRIMARIA nome risorsa
-		HashMap<String, String> infoRilevazioni = new HashMap<>();
+		HashMap<String, List<String>> infoRilevazioni = new HashMap<>();
 
 		// Creazione del ServerSocket
 		ServerSocket ss = new ServerSocket(port);
@@ -52,7 +52,7 @@ public class Master {
 				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 				
 				//Fase di avvio del thread per la gestione delle richieste dei client peer
-				//DA CREARE GESTIONE CLIENT.JAVA
+				
 				GestioneClient ThreadRichieste = new GestioneClient(socket, in, out, infoMacchinaClient, infoRilevazioni
 				//,gestoreLog DA IMPLEMENTARE IL COMANDO
 				); 

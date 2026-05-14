@@ -28,18 +28,22 @@ public class GestioneClient extends Thread {
     public GestioneClient(Socket socket, BufferedReader in, PrintWriter out,
             HashMap<String, String> infoMacchinaClient, HashMap<String, List<String>> infoRilevazioni) {
         //DA AGGIUNGERE GESTORE LOG 
+        //this.gestoreLog = gestoreLog;
+        //inizializzo variabili
+        this.socket = socket;
         this.in = in;
         this.out = out;
-        this.socket = socket;
         this.infoMacchinaClient = infoMacchinaClient;
-        this.infoRilevazioni= infoRilevazioni;
+        this.infoRilevazioni = infoRilevazioni;
     }
 
     @Override
     public void run() {
-    //DA IMPLEMENTARE Boolean statoRecuperoLista = true; //stato per il primo while
+    //DA IMPLEMENTARE 
+    Boolean statoRecuperoLista = true; //stato per il primo while
     //da fare :
     //recuperare stato della macchina usando infomacchinaclient
+    
     //nome ip porta
     //recupero stato client per capire se è nuovo o già esistente
     //confrontare nome hashmap infomacchinaclient con nome macchina del client

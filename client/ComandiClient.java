@@ -1,6 +1,7 @@
 package client;
 
 import client.comandi.Add;
+import client.comandi.InvioRilevazioni;
 import client.comandi.listDataLocal;//test chiamata classe da un altra cartella
 
 import java.io.BufferedReader;
@@ -42,6 +43,7 @@ public class ComandiClient extends Thread {
     
     @Override
     public void run(){
+        InvioRilevazioni inviaDati = new InvioRilevazioni();
         System.out.println("Comandi avviati");
         //mandare la lista  delle sue riprese da un file di testo
 
@@ -58,17 +60,19 @@ public class ComandiClient extends Thread {
                     String responseAggregator = inServer.readLine();
                     System.out.println("[DEBUG] Risposta ricevuta: " + responseAggregator);
                     
-                    if(responseAggregator.equals("NOMEMACCHINA_DUPLICATO")){
+                    if(responseAggregator.equals("nomeMacchina_DUPLICATO")){
                         System.out.println("[ATTENZIONE] Nome duplicato! Inserire un nuovo nome nel terminale:");
                         //reinserisci il nome
                         nomeMacchina = sc.nextLine();
                         System.out.println("[DEBUG] Nuovo nome inserito: " + nomeMacchina + ". Riprovo registrazione...");
-                    }else if(responseAggregator.equals("NOMEMACCHINA_VALIDA")){
+                    }else if(responseAggregator.equals("nomeMacchina_VALIDA")){
                         System.out.println("[OK] Nome valido. Invio credenziali: " + ip + " " + porta);
                         outServer.println(ip +" "+porta);
+
+                        System.out.println("[DEBUG] Registrazione completata con successo.");
+
                         primowhile = false;
                         secondowhile = true;
-                        System.out.println("[DEBUG] Registrazione completata con successo.");
                     }
                     
                 }else if(stato.equals("MACCHINA_ESISTENTE")){
@@ -87,8 +91,22 @@ public class ComandiClient extends Thread {
             }
         }
 
+        System.out.println("[CLIENT] Fase di registrazione conclusa, pronto per mandare i dati");
+        String start;
+        try {
+            start = inServer.readLine();
+            if(!"inizio_fase_rilevazioni".equals(start)) {
+                System.out.println("Protocollo desincronizzato");
+            return;
+        }
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
 
-
+        //serve per mandare i dati della rilevazione al master sfruttando la calsse che ha creato blerta
+        inviaDati.invia(outServer, datiRilevazione);
+        
 
 
 
@@ -107,7 +125,7 @@ public class ComandiClient extends Thread {
             if(comando.contains("listdata local")){
                 //accedere alle registrazioniu locali
                     listDataLocal listalocale = new listDataLocal();
-                    listalocale.mostraLista(datiRilevazione);
+                    listalocale.mostraLista(datiRilevazione, outServer,comando, inServer);
                 /**
                  * 
                  * 

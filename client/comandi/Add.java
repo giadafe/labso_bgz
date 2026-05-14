@@ -25,6 +25,8 @@ public class Add {
         System.out.println(nomeRilevazione);
         System.out.println(valoreRilevazione);
         //mando i dati al master
+
+
         //ciclo per verificare che il nome non sia duplicato 
         for(String n : datiRilevazione.keySet() ){
             if(nomeRilevazione!=n){
@@ -35,7 +37,7 @@ public class Add {
         }
 
 
-        //salvataggio enlla lista dei token
+        //salvataggio enlla lista dei token dopo la crittazione del contenuto
 
     }
 }

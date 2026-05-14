@@ -25,9 +25,9 @@ public class Download {
 
                 // Separiamo IP, Porta e Token ricevuti
                 String[] dati = risposta.split(":");
-                String ipNodo = dati;
-                int portaNodo = Integer.parseInt(dati[3]);
-                String token = dati[4];
+                String ipNodo = dati[0];
+                int portaNodo = Integer.parseInt(dati[1]);
+                String token = dati[2];
 
                 // Proviamo a connetterci direttamente all'altro nodo
                 try (Socket peer = new Socket(ipNodo, portaNodo);

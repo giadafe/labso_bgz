@@ -1,9 +1,12 @@
 package master;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /*
 * =================
@@ -25,6 +28,11 @@ public class GestioneClient extends Thread {
     public GestioneClient(Socket socket, BufferedReader in, PrintWriter out,
             HashMap<String, String> infoMacchinaClient, HashMap<String, List<String>> infoRilevazioni) {
         //DA AGGIUNGERE GESTORE LOG 
+        this.in = in;
+        this.out = out;
+        this.socket = socket;
+        this.infoMacchinaClient = infoMacchinaClient;
+        this.infoRilevazioni= infoRilevazioni;
     }
 
     @Override
@@ -37,77 +45,219 @@ public class GestioneClient extends Thread {
     //confrontare nome hashmap infomacchinaclient con nome macchina del client
     //se esiste mandare nome già esistente e dire al client di scegliere un altro nome
 
+
+    /*
+    * =================
+    * Fase di avvio del primo ciclo while
+    * =================
+    * Il ciclo permette láutenticazione della macchina/nodo 
+    * -se il nodo esiste, allora procede ad aggiornare le credenziali di quel nodo, quindi IP e PORTA
+    * -se il nodo e nuovo allora crea la entry, come new nomeNodo IP PORTA
+    */
+
+    //IMPORTANTE, BISOGNA AGGIUNGERE LA SINCRONIZZAZIONE PER LE HASHMAP
+    GestioneMacchine gestione = new GestioneMacchine(infoMacchinaClient); // classe che si occupa di salvare i dati della macchina allínterno della struttura dati
+    Boolean primoWhile = true;
+    String nomeMacchina="";
+    while(primoWhile){
+            try {
+                System.out.println("[SERVER] In attesa dello stato dal client...");
+                String statoClient = in.readLine();
+                System.out.println(statoClient);
+
+                if(statoClient == null) {
+                    System.out.println("[SERVER] Connessione interrotta dal client.");
+                    break;
+                }
+
+                if(statoClient.equals("NUOVA_MACCHINA")){
+                    System.out.println("[SERVER] LA MACCHINA E NUOVA, DEVE ESSERE REGISTRATA");
+                    try {
+                        String outnomeMacchina = in.readLine();
+                        System.out.println("[SERVER] Ricevuto nome macchina da verificare: " + outnomeMacchina);
+                        //controllo il nome cone le chiavi degli utenti esistenti nella lista concorrente
+                        if(infoMacchinaClient.containsKey(outnomeMacchina)){
+                            System.out.println("[SERVER] LA MACCHINA E NUOVA, MA CON IL NOME DUPLICATO: " + outnomeMacchina);
+                            out.println("nomeMacchina_DUPLICATO");
+                        }else{
+                            System.out.println("[SERVER] LA MACCHINA E NUOVA, MA IL NOME E NUOVO: " + outnomeMacchina);
+                            out.println("nomeMacchina_VALIDA"); 
+                            nomeMacchina=outnomeMacchina;
+                            System.out.println("[SERVER] In attesa delle credenziali per " + outnomeMacchina + "...");
+                            String credenziali = in.readLine();
+                            String [] divisione = credenziali.split(" ");
+                            System.out.println("[SERVER] Ricevute credenziali: IP=" + divisione[0] + " PORTA=" + divisione[1]);
+                            String credenzialiFormattate =divisione[0] + ":" + divisione[1]; //unione delle credenziali con :per la leggibvilita
+                            //salvataggio nella hashmap 
+                            infoMacchinaClient.put(outnomeMacchina, credenzialiFormattate);
+                            //TEST salvataggio in locale
+                            gestione.salvaMacchine();
+                            System.out.println("[DATABASE] Macchina registrata con successo: " + outnomeMacchina);
+                            primoWhile = false;
+                        }
+                    } catch (IOException e) {
+                        System.err.println("[ERRORE] Errore durante la lettura del nome o delle credenziali.");
+                        e.printStackTrace();
+                    }
+                }else if(statoClient.equals("MACCHINA_ESISTENTE")){
+                    //recuperiamo nome ip porta
+                    String outnomeMacchinaDaAggiornare = in.readLine();
+                    System.out.println("[SERVER] Ricevuto nome macchina da verificare: " + outnomeMacchinaDaAggiornare);
+                    nomeMacchina = outnomeMacchinaDaAggiornare;
+                    //aggioriamo ip e porta del nome per via dellíp dinamico delle nostre reti
+                    String credenzialiDaAggiornare = in.readLine();
+                    infoMacchinaClient.put(outnomeMacchinaDaAggiornare, credenzialiDaAggiornare);
+                    gestione.salvaMacchine();
+                    primoWhile = false;
+
+                }
+            } catch (IOException e) {
+                System.err.println("[ERRORE] Errore di comunicazione con il client.");
+                e.printStackTrace();
+            } 
+        }
+
+
+
+        System.out.println("[SERVER] Fase di registrazione conclusa, pronto per il recupero dei dati");
+
+
+
+
+    /*
+        * =================
+        * Fase di avvio del secondo ciclo while 
+        * =================
+        * Il ciclo permette l'acquisizione delle risorse
+        * -se il client notifica con fine_condivisione il ciclo termina e sblocca il controller 
+        * -se ci sono i dati da ricevere allora il tutto viene revisionato in modod da ottenere esattamente nomeRilevazione e contenuto
+        * -il contenuto viene riscritto in un unica stringa se nomeRilevazione esiste gia come chiave,
+        *  allora viene inserita la lista con al suo interno i valori come nomeMacchina, token, disponibilita.
+        *  se non esiste allora verra inserita la chiave e una lista vuota che ad ogn iiterazione verra riempita con il nuovo valore.
+        * 
+    */
+        out.println("inizio_fase_rilevazioni");
+        out.flush();
+
+        Boolean whileRiceviDati = true;
+        String letturaRilevazioni;
+
+        try {
+            while ((letturaRilevazioni = in.readLine()) != null && whileRiceviDati) {
+                //condizione d'uscita
+                if (letturaRilevazioni.equals("fine_condivisione")) {
+                    whileRiceviDati = false;
+                    break;
+                }
+
+
+
+                String[] scomposizione = letturaRilevazioni.split(",");
+                if (scomposizione.length < 2) {
+                  continue;
+                }
+
+                String nomeRilevazione = scomposizione[0];
+                String contenuto = scomposizione[1];
+                String composizioneStringa = nomeMacchina + ":" + contenuto + ":DISPONIBILE";
+
+                List<String> lista = infoRilevazioni.get(nomeRilevazione);
+
+                if (lista == null) {
+                    lista = new ArrayList<>();
+                    infoRilevazioni.put(nomeRilevazione, lista);
+                }
+                lista.add(composizioneStringa);
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        System.out.println("[SERVER] Fase di acquisizione dei dati conclusa, pronto perrendere disponibile le sue risorse ad altri client");
+
+
+
+
+
+        //fase per mettere a disponibile tutte le risorse di un determinato client connesso.
+        for(String chiave : infoRilevazioni.keySet()) {
+            List<String> valoriDaMettereDisponibili = infoRilevazioni.get(chiave); //riferimento della lista
+            for(int i = 0; i< valoriDaMettereDisponibili.size(); i++){
+                String valore = valoriDaMettereDisponibili.get(i);
+                String divisioneValori [] = valore.split(":");
+                String nomeMAcchinaCheck = divisioneValori[0];
+                String statoDisponibilita = divisioneValori[2];
+                if(nomeMAcchinaCheck.equals(nomeMacchina) && statoDisponibilita.equals("NON_DISPONIBILE")){
+                    //imposto a DISPONIBILE la rilevazione 
+                    String valoreAggironato  = nomeMAcchinaCheck +":"+ divisioneValori[1]+":"+ "DISPONIBILE";
+                    //aggiornamento
+                    valoriDaMettereDisponibili.set(i, valoreAggironato);
+                }
+            }
+        }
+    System.out.println("[SERVER] Fase di aggiornamento dei dati conclusa, pronto per attivare i comandi per il client");
+
+
+
+
+
+
+
+
+
+    
     /*
     * =================
     * Fase di avvio del secondo ciclo while
     * =================
     * 
     */
-    String raccoltaInput; //dichiaro variabile input
+        String raccoltaInput; //dichiaro variabile input
 
-    boolean gestioneRichieste = true; //stato per il secondo while
-    while (gestioneRichieste && (raccoltaInput=in.readline())) {
-        if (raccoltaInput.contains("listdata local")
-          out.println("accesso_lista_local");
-        ) else if (raccoltaInput.contains("listdata remote")
-    /*
-        * =================
-        * Comando listdata remote
-        * =================
-        * Gestione della richiesta di lista delle risorse remote condivise.
-    */
-        ) else if (raccoltaInput.contains("add")
-     /*
-        * =================
-        * Comando add
-        * =================
-        * Gestione la fase di aggiunta di una nuova risorsa condivisa dal client.
-    */
-        ) else if (raccoltaInput.contains("download")
-    /*
-        * =================
-        * Comando download
-        * =================
-        * Gestione della richiesta di download di una risorsa da parte del client.
-    */
-        ) else if (raccoltaInput.contains("quit")
-     /*
-        * =================
-        * Comando quit
-        * =================
-        * Gestione della disconnessione del client.
-        * 
-    */ 
-          gestioneRichieste = false; //esco dal ciclo while
-        ) else {
-            System.out.println("Comando non valido: " + raccoltaInput);
+        boolean gestioneRichieste = true; //stato per il secondo while
+        try {
+            System.out.println("Controller attivo");
+            while (gestioneRichieste && (raccoltaInput=in.readLine())!=null) {
+                System.out.println("Comando ricevuto:  "+ raccoltaInput);
+
+                if(raccoltaInput.equals("listdata local")){
+                    out.println("accesso_lista_local");
+                }else if (raccoltaInput.contains("listdata remote")){
+            /*
+                * =================
+                * Comando listdata remote
+                * =================
+                * Gestione della richiesta di lista delle risorse remote condivise.
+            */
+                }else if (raccoltaInput.contains("add")){
+            /*
+                * =================
+                * Comando add
+                * =================
+                * Gestione la fase di aggiunta di una nuova risorsa condivisa dal client.
+            */
+                }else if (raccoltaInput.contains("download")){
+            /*
+                * =================
+                * Comando download
+                * =================
+                * Gestione della richiesta di download di una risorsa da parte del client.
+            */
+                }else if (raccoltaInput.contains("quit")){
+            /*
+                * =================
+                * Comando quit
+                * =================
+                * Gestione della disconnessione del client.
+                * 
+            */ 
+                gestioneRichieste = false; //esco dal ciclo while
+                }else{
+                    System.out.println("Comando non valido: " + raccoltaInput);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     }
-
-
-
-
-
-
-
-
-
 }
-

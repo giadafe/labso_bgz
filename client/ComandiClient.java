@@ -1,7 +1,9 @@
 package client;
 
 import client.comandi.Add;
+import client.comandi.Download;
 import client.comandi.InvioRilevazioni;
+import client.comandi.ListDataRemote;
 import client.comandi.listDataLocal;//test chiamata classe da un altra cartella
 
 import java.io.BufferedReader;
@@ -26,9 +28,10 @@ public class ComandiClient extends Thread {
     public ChiusuraSocket chiusura;
     public Socket socket;
     public Map<String,String> datiRilevazione;
+    public Map<String,String> tokenSblocco;
 
 
-    public ComandiClient(BufferedReader inServer, PrintWriter outServer, String nomeMacchina, Scanner sc, String stato, String ip, int porta, ChiusuraSocket chiusura, Socket socket, Map<String,String> datiRilevazione) {
+    public ComandiClient(BufferedReader inServer, PrintWriter outServer, String nomeMacchina, Scanner sc, String stato, String ip, int porta, ChiusuraSocket chiusura, Socket socket, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco) {
         this.nomeMacchina = nomeMacchina;
         this.inServer = inServer;
         this.outServer = outServer;
@@ -39,6 +42,7 @@ public class ComandiClient extends Thread {
         this.chiusura=chiusura;
         this.socket=socket;
         this.datiRilevazione= datiRilevazione;
+        this.tokenSblocco= tokenSblocco;
     }
     
     @Override
@@ -154,14 +158,35 @@ public class ComandiClient extends Thread {
 
             }else if(comando.contains("listdata remote")){
                 //fare una get al server
+                ListDataRemote dataRemote = new ListDataRemote();
+                dataRemote.esegui(outServer, inServer ,comando);
+
+
+
             }else if(comando.contains("add")){
-                //aggiugnere registraizone + valore tutto in String
+                //aggiungere nome registrazione + valore tutto in String
                 String scomposizioneComando [] = comando.split(" ",3);// salvo in blocchi di 3 le stringhe 
-                Add addRilevazioni = new Add(scomposizioneComando,inServer,outServer, datiRilevazione);
-                addRilevazioni.addRilevazione();
+                if(scomposizioneComando.length != 3){
+                    System.out.println("comando inserito sbagliato");
+                    continue;
+                }else{
+                    Add addRilevazioni = new Add(scomposizioneComando,inServer,outServer, datiRilevazione, sc, tokenSblocco); //aggiugnere le liste
+                    addRilevazioni.addRilevazione();
+                }                
+
+
+
+
+
+
+
             }else if(comando.contains("download")){
-                //implementare la crittografia AES, usare la chiave per sbloccare il cyphertext
-                //mandare il nome e la chiave al master
+                String scomposizioneComando [] = comando.split(" ",2);// salvo in blocchi di 3 le stringhe 
+                String comandoScelto = scomposizioneComando[0];
+                String nomeFile = scomposizioneComando[1];
+                Download downloadRisorsa = new Download();
+                downloadRisorsa.scarica(nomeFile, outServer, inServer, comandoScelto);
+
             }else if(comando.equals("quit")){
                 //chiudere tutti i thread  e terminare il main
             }else{

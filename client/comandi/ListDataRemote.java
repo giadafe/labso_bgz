@@ -8,9 +8,9 @@ import java.io.PrintWriter;
 public class ListDataRemote {
 
     // Metodo per chiedere la lista al server e stamparla
-    public void esegui(PrintWriter outServer, BufferedReader inServer) {
+    public void esegui(PrintWriter outServer, BufferedReader inServer, String comando) {
         // Inviamo il comando al Aggregator
-        outServer.println("listdata remote");
+        outServer.println(comando);
         outServer.flush();
 
         try {
@@ -29,6 +29,7 @@ public class ListDataRemote {
         } catch (IOException e) {
             // Gestione errore se il server si disconnette
             System.err.println("[ERRORE] Problema con il server durante la listdata remote");
+            //disconnessione 
         }
     }
 }

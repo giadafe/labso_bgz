@@ -24,8 +24,8 @@ public class Client {
 
         //creazione struttura dati condivisa thread safe
 
-        Map<String,String> datiRilevazione  = new ConcurrentHashMap<>();//nome file piu cypher text 
-        Map<String,String> tokenSblocco  = new ConcurrentHashMap<>();//nomefile + token
+        Map<String,String> datiRilevazione  = new ConcurrentHashMap<>();//NOMEFILE > CHIAVE DECRITTAZIONE 
+        Map<String,String> tokenSblocco  = new ConcurrentHashMap<>();//TOKEN > CHIAVE DECRITTAZIONE
         RecuperoDatiRilevazioni recuperoRilevazioni = new RecuperoDatiRilevazioni(datiRilevazione,tokenSblocco);
         recuperoRilevazioni.caricamentoLista();// carico la lista di rilevazioni locali nella struttura dati
 
@@ -78,7 +78,7 @@ public class Client {
             System.out.println("Sei connesso al master");
 
             //avvio del thread dei comandi
-            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, porta, chiusura, socket, datiRilevazione);
+            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, porta, chiusura, socket, datiRilevazione, tokenSblocco);
             comandi.start();
             //avvio del server per effettuare la connessione P2P
             ServerRilevazioni serverRilevazioni = new ServerRilevazioni(portaAggregator,inServer,outServer);

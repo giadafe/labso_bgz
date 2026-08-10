@@ -1,4 +1,4 @@
-package master;
+﻿package master;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -23,6 +23,7 @@ public class GestioneClient extends Thread {
     private PrintWriter out;
     private HashMap<String, String> infoMacchinaClient;
     private HashMap<String, List<String>> infoRilevazioni;
+    private String nomeMacchina = "";
 
 
     public GestioneClient(Socket socket, BufferedReader in, PrintWriter out,
@@ -39,8 +40,6 @@ public class GestioneClient extends Thread {
 
     @Override
     public void run() {
-    //DA IMPLEMENTARE 
-    Boolean statoRecuperoLista = true; //stato per il primo while
     //da fare :
     //recuperare stato della macchina usando infomacchinaclient
     
@@ -59,10 +58,8 @@ public class GestioneClient extends Thread {
     * -se il nodo e nuovo allora crea la entry, come new nomeNodo IP PORTA
     */
 
-    //IMPORTANTE, BISOGNA AGGIUNGERE LA SINCRONIZZAZIONE PER LE HASHMAP
     GestioneMacchine gestione = new GestioneMacchine(infoMacchinaClient); // classe che si occupa di salvare i dati della macchina allínterno della struttura dati
-    Boolean primoWhile = true;
-    String nomeMacchina="";
+    boolean primoWhile = true;
     while(primoWhile){
             try {
                 System.out.println("[SERVER] In attesa dello stato dal client...");
@@ -86,12 +83,12 @@ public class GestioneClient extends Thread {
                         }else{
                             System.out.println("[SERVER] LA MACCHINA E NUOVA, MA IL NOME E NUOVO: " + outnomeMacchina);
                             out.println("nomeMacchina_VALIDA"); 
-                            nomeMacchina=outnomeMacchina;
+                            this.nomeMacchina = outnomeMacchina;
                             System.out.println("[SERVER] In attesa delle credenziali per " + outnomeMacchina + "...");
                             String credenziali = in.readLine();
                             String [] divisione = credenziali.split(" ");
                             System.out.println("[SERVER] Ricevute credenziali: IP=" + divisione[0] + " PORTA=" + divisione[1]);
-                            String credenzialiFormattate =divisione[0] + ":" + divisione[1]; //unione delle credenziali con :per la leggibvilita
+                            String credenzialiFormattate = divisione[0] + ":" + divisione[1]; //unione delle credenziali con :per la leggibilita
                             //salvataggio nella hashmap 
                             infoMacchinaClient.put(outnomeMacchina, credenzialiFormattate);
                             //TEST salvataggio in locale
@@ -107,9 +104,21 @@ public class GestioneClient extends Thread {
                     //recuperiamo nome ip porta
                     String outnomeMacchinaDaAggiornare = in.readLine();
                     System.out.println("[SERVER] Ricevuto nome macchina da verificare: " + outnomeMacchinaDaAggiornare);
-                    nomeMacchina = outnomeMacchinaDaAggiornare;
-                    //aggioriamo ip e porta del nome per via dellíp dinamico delle nostre reti
+                    this.nomeMacchina = outnomeMacchinaDaAggiornare;
+                    //aggioriamo ip e porta del nome per via dell' ip dinamico delle nostre reti
                     String credenzialiDaAggiornare = in.readLine();
+                    // Legge le credenziali ricevute dal client e le trasforma in formato "ip:porta"
+                    // Se la stringa non è nulla, pulisce eventuali spazi e la divide in parti
+                    String[] divisioneCredenziali = credenzialiDaAggiornare != null
+                            ? credenzialiDaAggiornare.trim().split("\\s+")
+                            : new String[0];
+                    if (divisioneCredenziali.length >= 2) {
+                        // Se sono presenti entrambi i valori, li unisce
+                        credenzialiDaAggiornare = divisioneCredenziali[0] + ":" + divisioneCredenziali[1];
+                    } else {
+                        // Se i dati sono incompleti, usa un valore di default 
+                        credenzialiDaAggiornare = "0.0.0.0:0";
+                    }
                     infoMacchinaClient.put(outnomeMacchinaDaAggiornare, credenzialiDaAggiornare);
                     gestione.salvaMacchine();
                     primoWhile = false;
@@ -163,7 +172,7 @@ public class GestioneClient extends Thread {
 
                 String nomeRilevazione = scomposizione[0];
                 String contenuto = scomposizione[1];
-                String composizioneStringa = nomeMacchina + ":" + contenuto + ":DISPONIBILE";
+                String composizioneStringa = this.nomeMacchina + ":" + contenuto + ":DISPONIBILE";
 
                 List<String> lista = infoRilevazioni.get(nomeRilevazione);
 
@@ -191,7 +200,7 @@ public class GestioneClient extends Thread {
                 String divisioneValori [] = valore.split(":");
                 String nomeMAcchinaCheck = divisioneValori[0];
                 String statoDisponibilita = divisioneValori[2];
-                if(nomeMAcchinaCheck.equals(nomeMacchina) && statoDisponibilita.equals("NON_DISPONIBILE")){
+                if(nomeMAcchinaCheck.equals(this.nomeMacchina) && statoDisponibilita.equals("NON_DISPONIBILE")){
                     //imposto a DISPONIBILE la rilevazione 
                     String valoreAggironato  = nomeMAcchinaCheck +":"+ divisioneValori[1]+":"+ "DISPONIBILE";
                     //aggiornamento
@@ -226,6 +235,7 @@ public class GestioneClient extends Thread {
 
                 if(raccoltaInput.equals("listdata local")){
                     out.println("accesso_lista_local");
+                    out.flush();
                 }else if (raccoltaInput.contains("listdata remote")){
             /*
                 * =================

@@ -11,10 +11,11 @@ import java.util.*;
  */
 public class masterComandi implements Runnable {
     public ServerSocket ss;
+    private Map<String, List<String>> infoRilevazioni;
 
-
-    public masterComandi(ServerSocket ss) {
+    public masterComandi(ServerSocket ss, Map<String, List<String>> infoRilevazioni) {
         this.ss = ss;
+        this.infoRilevazioni = infoRilevazioni;
     }
     /**
      * ==========
@@ -43,7 +44,15 @@ public class masterComandi implements Runnable {
                  */
                 case "listdata":
                     System.out.println("[SERVER:] A breve riceverai la lista delle risorse");
-                    // Logica per listdata
+                    // Logica per listdata: mostra le chiavi delle risorse disponibili
+                    if (infoRilevazioni == null || infoRilevazioni.isEmpty()) {
+                        System.out.println("[SERVER:] Non ci sono risorse disponibili.");
+                    } else {
+                        System.out.println("[SERVER:] Risorse disponibili:");
+                        for (String risorsa : infoRilevazioni.keySet()) {
+                            System.out.println("- " + risorsa);
+                        }
+                    }
 
                     break;
 

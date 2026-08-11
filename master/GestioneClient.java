@@ -1,4 +1,4 @@
-﻿package master;
+package master;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -236,13 +236,23 @@ public class GestioneClient extends Thread {
                 if(raccoltaInput.equals("listdata local")){
                     out.println("accesso_lista_local");
                     out.flush();
-                }else if (raccoltaInput.contains("listdata remote")){
-            /*
-                * =================
-                * Comando listdata remote
-                * =================
-                * Gestione della richiesta di lista delle risorse remote condivise.
-            */
+                } else if (raccoltaInput.contains("listdata remote")){
+                    /*
+                     * =================
+                     * Comando listdata remote
+                     * =================
+                     * Invia al client la lista delle risorse condivise (chiavi di infoRilevazioni)
+                     */
+                    if (infoRilevazioni == null || infoRilevazioni.isEmpty()) {
+                        out.println("FINE_LISTA");
+                        out.flush();
+                    } else {
+                        for (String risorsa : infoRilevazioni.keySet()) {
+                            out.println(risorsa);
+                        }
+                        out.println("FINE_LISTA");
+                        out.flush();
+                    }
                 }else if (raccoltaInput.contains("add")){
             /*
                 * =================

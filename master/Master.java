@@ -38,7 +38,7 @@ public class Master {
 		System.out.println("ServerSocket in ascolto sulla porta " + port + "...");
 
 		// Fase di avvio del thread per la gestione dei comandi del Master
-		Thread masterComandi = new Thread(new masterComandi(ss));
+		Thread masterComandi = new Thread(new masterComandi(ss, infoRilevazioni));
 		masterComandi.start();
 
 		//Fase di accettazione delle connessioni in ingresso dai client peer

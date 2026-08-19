@@ -17,25 +17,25 @@ import java.util.List;
 
 
 public class GestioneClient extends Thread {
-    //private GestoreLog gestoreLog;
     private Socket socket;
     private BufferedReader in;
     private PrintWriter out;
     private HashMap<String, String> infoMacchinaClient;
     private HashMap<String, List<String>> infoRilevazioni;
+    private GestoreLog gestoreLog;
     private String nomeMacchina = "";
 
 
     public GestioneClient(Socket socket, BufferedReader in, PrintWriter out,
-            HashMap<String, String> infoMacchinaClient, HashMap<String, List<String>> infoRilevazioni) {
-        //DA AGGIUNGERE GESTORE LOG 
-        //this.gestoreLog = gestoreLog;
+            HashMap<String, String> infoMacchinaClient, HashMap<String, List<String>> infoRilevazioni,
+            GestoreLog gestoreLog) {
         //inizializzo variabili
         this.socket = socket;
         this.in = in;
         this.out = out;
         this.infoMacchinaClient = infoMacchinaClient;
         this.infoRilevazioni = infoRilevazioni;
+        this.gestoreLog = gestoreLog;
     }
 
     @Override
@@ -267,6 +267,26 @@ public class GestioneClient extends Thread {
                 * =================
                 * Gestione della richiesta di download di una risorsa da parte del client.
             */
+                    String[] richiesta = raccoltaInput.split(",", 2);
+                    String risorsa = richiesta.length == 2 ? richiesta[1].trim() : "";
+                    if (!risorsa.isEmpty()) {
+                        String peerPossessore = trovaPossessore(risorsa);
+                        gestoreLog.logDownload(risorsa, nomeMacchina, peerPossessore);
+                    }
+                }else if (raccoltaInput.contains(",")) {
+                    String[] nuovaRisorsa = raccoltaInput.split(",", 2);
+                    String nomeRisorsa = nuovaRisorsa[0].trim();
+                    String token = nuovaRisorsa[1].trim();
+                    if (!nomeRisorsa.isEmpty() && !token.isEmpty()) {
+                        synchronized (infoRilevazioni) {
+                            List<String> risorse = infoRilevazioni.get(nomeRisorsa);
+                            if (risorse == null) {
+                                risorse = new ArrayList<>();
+                                infoRilevazioni.put(nomeRisorsa, risorse);
+                            }
+                            risorse.add(nomeMacchina + ":" + token + ":DISPONIBILE");
+                        }
+                    }
                 }else if (raccoltaInput.contains("quit")){
             /*
                 * =================
@@ -283,5 +303,29 @@ public class GestioneClient extends Thread {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String trovaPossessore(String nomeRisorsa) {
+        String nomeRisorsaNormalizzato = nomeRisorsa.trim();
+        List<String> risorse = infoRilevazioni.get(nomeRisorsaNormalizzato);
+        if (risorse == null) {
+            for (String nomeRegistrato : infoRilevazioni.keySet()) {
+                if (nomeRegistrato.trim().equalsIgnoreCase(nomeRisorsaNormalizzato)) {
+                    risorse = infoRilevazioni.get(nomeRegistrato);
+                    break;
+                }
+            }
+        }
+        if (risorse == null) {
+            return "risorsa non trovata";
+        }
+
+        for (String risorsa : risorse) {
+            String[] dati = risorsa.split(":");
+            if (dati.length >= 3 && !dati[0].trim().isEmpty()) {
+                return dati[0];
+            }
+        }
+        return "nessun peer disponibile";
     }
 }

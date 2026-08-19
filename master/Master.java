@@ -32,13 +32,14 @@ public class Master {
 
 		//creazione hashmap per le rilevazioni CHIAVE PRIMARIA nome risorsa
 		HashMap<String, List<String>> infoRilevazioni = new HashMap<>();
+		GestoreLog gestoreLog = new GestoreLog();
 
 		// Creazione del ServerSocket
 		ServerSocket ss = new ServerSocket(port);
 		System.out.println("ServerSocket in ascolto sulla porta " + port + "...");
 
 		// Fase di avvio del thread per la gestione dei comandi del Master
-		Thread masterComandi = new Thread(new masterComandi(ss, infoRilevazioni));
+		Thread masterComandi = new Thread(new masterComandi(ss, infoRilevazioni, gestoreLog));
 		masterComandi.start();
 
 		//Fase di accettazione delle connessioni in ingresso dai client peer
@@ -53,9 +54,8 @@ public class Master {
 				
 				//Fase di avvio del thread per la gestione delle richieste dei client peer
 				
-				GestioneClient ThreadRichieste = new GestioneClient(socket, in, out, infoMacchinaClient, infoRilevazioni
-				//,gestoreLog DA IMPLEMENTARE IL COMANDO
-				); 
+				GestioneClient ThreadRichieste = new GestioneClient(socket, in, out, infoMacchinaClient, infoRilevazioni,
+						gestoreLog);
 				
 				ThreadRichieste.start();
 			}

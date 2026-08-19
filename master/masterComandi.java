@@ -12,10 +12,12 @@ import java.util.*;
 public class masterComandi implements Runnable {
     public ServerSocket ss;
     private Map<String, List<String>> infoRilevazioni;
+    private GestoreLog gestoreLog;
 
-    public masterComandi(ServerSocket ss, Map<String, List<String>> infoRilevazioni) {
+    public masterComandi(ServerSocket ss, Map<String, List<String>> infoRilevazioni, GestoreLog gestoreLog) {
         this.ss = ss;
         this.infoRilevazioni = infoRilevazioni;
+        this.gestoreLog = gestoreLog;
     }
     /**
      * ==========
@@ -29,9 +31,9 @@ public class masterComandi implements Runnable {
 
         while (stato) {
             System.out.println("[SERVER:] scegliere fra uno dei seguenti comandi:");
-            System.out.print(">listData");
-            System.out.print(">log");
-            System.out.print(">quit");
+            System.out.println(">listData");
+            System.out.println(">log");
+            System.out.println(">quit");
 
             String comando = scanner.nextLine();
             // Gestione dei comandi con lo switch else al posto di if else 
@@ -64,9 +66,7 @@ public class masterComandi implements Runnable {
                  */
                 case "log":
                     System.out.println("[SERVER:] Ecco i log:");
-
-                    //Recupero dei log
-
+                    gestoreLog.stampa();
                     break;
                 /**
                  * ===========

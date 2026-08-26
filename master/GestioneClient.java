@@ -243,23 +243,59 @@ public class GestioneClient extends Thread {
                      * =================
                      * Invia al client la lista delle risorse condivise (chiavi di infoRilevazioni)
                      */
-                    if (infoRilevazioni == null || infoRilevazioni.isEmpty()) {
+                     if (infoRilevazioni == null || infoRilevazioni.isEmpty()) {
                         out.println("FINE_LISTA");
                         out.flush();
                     } else {
                         for (String risorsa : infoRilevazioni.keySet()) {
-                            out.println(risorsa);
+                            List<String> peerConRilevazione= new ArrayList<>();
+                            //accedo ad ogni singolo peer e ne recupero il nome
+                            synchronized(infoRilevazioni){
+                                //accedo risorsa[0] 
+                                List<String> peerPosseduti = infoRilevazioni.get(risorsa); 
+                                for(String peer : peerPosseduti){
+                                    String decostruzionePeer[] = peer.split(", ");
+                                    peerConRilevazione.add(decostruzionePeer[0]);
+                                }
+                            }
+                            String riga = "- " + risorsa + ": " + String.join(", ", peerConRilevazione);
+                            out.println(riga);
                         }
                         out.println("FINE_LISTA");
                         out.flush();
                     }
-                }else if (raccoltaInput.contains("add")){
+                
             /*
                 * =================
                 * Comando add
                 * =================
                 * Gestione la fase di aggiunta di una nuova risorsa condivisa dal client.
-            */
+            */ 
+                System.out.println("comando add ricevuto");
+                String rilevazioneDaAggiungere = in.readLine();
+                System.out.println("dati da aggiungere:   " + rilevazioneDaAggiungere ); 
+                String[] dati = rilevazioneDaAggiungere.split(", ");
+                String nomeRilevazione = dati[0]; 
+                String token = dati[1];
+                //inserisco nella struttura dati delle risorse
+                synchronized(infoRilevazioni){
+                    if(!infoRilevazioni.containsKey(nomeRilevazione)){
+                        //non esiste la corrispondenza con la chiave
+                        //creo la lista che ospitera il peer e nuovi peer con la stessa risorsa 
+                        List<String> peer = new ArrayList<>();
+                        //nomeNodo cosi faccio una ricerca O(1) nella lista e recupero sia ip e porta partendo dal nome
+                        //token
+                        //riempo la lista 
+                        peer.add("giada"+", "+ token);
+                        //creo la chiave e la lista 
+                        infoRilevazioni.put(nomeRilevazione, peer);
+                    }else{
+                        //faccio una get per accedere alla lista 
+                        List<String> peers = infoRilevazioni.get(nomeRilevazione);
+                        peers.add("giada"+", "+ token);
+                    }
+                }
+                out.println("RILEVAZIONE_AGGIUNTA");
                 }else if (raccoltaInput.contains("download")){
             /*
                 * =================

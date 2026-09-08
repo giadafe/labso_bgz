@@ -27,8 +27,13 @@ public class Master {
 			return;
 		}
 
+		//risorse condivise traq i thread.
+		// creazione di un hashmap per la gestione dei socket 
+		HashMap<String, Socket> socketClient = new HashMap<>(); // nomeMacchina > socket
+		//creazione di  un hashmap risorsa disponobilita 
+		HashMap<String, String> disponibilitaRilevazione = new HashMap<>(); // nomeRisorsa > DISPONIBILE | OCCUPATO
 		//creazione di una hasmap per salvare il nome della macchina, ip e porta
-		HashMap<String, String> infoMacchinaClient = new HashMap<>();
+		HashMap<String, String> infoMacchinaClient = new HashMap<>(); // nomeMacchina > ip, porta, online | offline
 
 		//creazione hashmap per le rilevazioni CHIAVE PRIMARIA nome risorsa
 		HashMap<String, List<String>> infoRilevazioni = new HashMap<>();
@@ -55,7 +60,7 @@ public class Master {
 				//Fase di avvio del thread per la gestione delle richieste dei client peer
 				
 				GestioneClient ThreadRichieste = new GestioneClient(socket, in, out, infoMacchinaClient, infoRilevazioni,
-						gestoreLog);
+						gestoreLog,disponibilitaRilevazione ,socketClient);
 				
 				ThreadRichieste.start();
 			}

@@ -3,6 +3,7 @@ package master;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,11 +25,12 @@ public class GestioneClient extends Thread {
     private HashMap<String, List<String>> infoRilevazioni;
     private GestoreLog gestoreLog;
     private String nomeMacchina = "";
-
+    private HashMap<String, String> disponibilitaRilevazione;
+    private HashMap<String, Socket> socketClient;
 
     public GestioneClient(Socket socket, BufferedReader in, PrintWriter out,
             HashMap<String, String> infoMacchinaClient, HashMap<String, List<String>> infoRilevazioni,
-            GestoreLog gestoreLog) {
+            GestoreLog gestoreLog, HashMap<String, String> disponibilitaRilevazione, HashMap<String, Socket> socketClient) {
         //inizializzo variabili
         this.socket = socket;
         this.in = in;
@@ -36,6 +38,8 @@ public class GestioneClient extends Thread {
         this.infoMacchinaClient = infoMacchinaClient;
         this.infoRilevazioni = infoRilevazioni;
         this.gestoreLog = gestoreLog;
+        this.disponibilitaRilevazione = disponibilitaRilevazione;
+        this.socketClient = socketClient;
     }
 
     @Override
@@ -88,9 +92,11 @@ public class GestioneClient extends Thread {
                             String credenziali = in.readLine();
                             String [] divisione = credenziali.split(" ");
                             System.out.println("[SERVER] Ricevute credenziali: IP=" + divisione[0] + " PORTA=" + divisione[1]);
-                            String credenzialiFormattate = divisione[0] + ":" + divisione[1]; //unione delle credenziali con :per la leggibilita
+                            String credenzialiFormattate = divisione[0] + ":" + divisione[1] + ":" + "ONLINE"; //unione delle credenziali con :per la leggibilita
                             //salvataggio nella hashmap 
                             infoMacchinaClient.put(outnomeMacchina, credenzialiFormattate);
+                            socketClient.put(outnomeMacchina, socket);
+
                             //TEST salvataggio in locale
                             gestione.salvaMacchine();
                             System.out.println("[DATABASE] Macchina registrata con successo: " + outnomeMacchina);
@@ -114,13 +120,14 @@ public class GestioneClient extends Thread {
                             : new String[0];
                     if (divisioneCredenziali.length >= 2) {
                         // Se sono presenti entrambi i valori, li unisce
-                        credenzialiDaAggiornare = divisioneCredenziali[0] + ":" + divisioneCredenziali[1];
+                        credenzialiDaAggiornare = divisioneCredenziali[0] + ":" + divisioneCredenziali[1] + ":" + "ONLINE";
                     } else {
                         // Se i dati sono incompleti, usa un valore di default 
                         credenzialiDaAggiornare = "0.0.0.0:0";
                     }
                     infoMacchinaClient.put(outnomeMacchinaDaAggiornare, credenzialiDaAggiornare);
                     gestione.salvaMacchine();
+                    socketClient.put(outnomeMacchinaDaAggiornare, socket); // salviamo il socket del client cosi da facilitare l'operazione di quit
                     primoWhile = false;
 
                 }
@@ -171,14 +178,15 @@ public class GestioneClient extends Thread {
                 }
 
                 String nomeRilevazione = scomposizione[0];
-                String contenuto = scomposizione[1];
-                String composizioneStringa = this.nomeMacchina + ":" + contenuto + ":DISPONIBILE";
+                String token = scomposizione[1];
+                String composizioneStringa = this.nomeMacchina + ":" + token;
 
                 List<String> lista = infoRilevazioni.get(nomeRilevazione);
 
                 if (lista == null) {
                     lista = new ArrayList<>();
                     infoRilevazioni.put(nomeRilevazione, lista);
+                    disponibilitaRilevazione.put(nomeRilevazione, "DISPONIBILE");
                 }
                 lista.add(composizioneStringa);
             }
@@ -199,12 +207,9 @@ public class GestioneClient extends Thread {
                 String valore = valoriDaMettereDisponibili.get(i);
                 String divisioneValori [] = valore.split(":");
                 String nomeMAcchinaCheck = divisioneValori[0];
-                String statoDisponibilita = divisioneValori[2];
-                if(nomeMAcchinaCheck.equals(this.nomeMacchina) && statoDisponibilita.equals("NON_DISPONIBILE")){
+                if(nomeMAcchinaCheck.equals(this.nomeMacchina)){
                     //imposto a DISPONIBILE la rilevazione 
-                    String valoreAggironato  = nomeMAcchinaCheck +":"+ divisioneValori[1]+":"+ "DISPONIBILE";
-                    //aggiornamento
-                    valoriDaMettereDisponibili.set(i, valoreAggironato);
+                    disponibilitaRilevazione.put(chiave, "DISPONIBILE");
                 }
             }
         }
@@ -236,6 +241,10 @@ public class GestioneClient extends Thread {
                 if(raccoltaInput.equals("listdata local")){
                     out.println("accesso_lista_local");
                     out.flush();
+
+
+
+
                 } else if (raccoltaInput.contains("listdata remote")){
                     /*
                      * =================
@@ -254,7 +263,9 @@ public class GestioneClient extends Thread {
                                 //accedo risorsa[0] 
                                 List<String> peerPosseduti = infoRilevazioni.get(risorsa); 
                                 for(String peer : peerPosseduti){
-                                    String decostruzionePeer[] = peer.split(", ");
+                                    String decostruzionePeer[] = peer.split(":");
+                                    System.out.println("Peer trovato: " + decostruzionePeer[0]);
+                                    System.out.println("Token trovato: " + decostruzionePeer[1]);
                                     peerConRilevazione.add(decostruzionePeer[0]);
                                 }
                             }
@@ -265,62 +276,98 @@ public class GestioneClient extends Thread {
                         out.flush();
                     }
                 
-            /*
-                * =================
-                * Comando add
-                * =================
-                * Gestione la fase di aggiunta di una nuova risorsa condivisa dal client.
-            */ 
-                System.out.println("comando add ricevuto");
-                String rilevazioneDaAggiungere = in.readLine();
-                System.out.println("dati da aggiungere:   " + rilevazioneDaAggiungere ); 
-                String[] dati = rilevazioneDaAggiungere.split(", ");
-                String nomeRilevazione = dati[0]; 
-                String token = dati[1];
-                //inserisco nella struttura dati delle risorse
-                synchronized(infoRilevazioni){
-                    if(!infoRilevazioni.containsKey(nomeRilevazione)){
-                        //non esiste la corrispondenza con la chiave
-                        //creo la lista che ospitera il peer e nuovi peer con la stessa risorsa 
-                        List<String> peer = new ArrayList<>();
-                        //nomeNodo cosi faccio una ricerca O(1) nella lista e recupero sia ip e porta partendo dal nome
-                        //token
-                        //riempo la lista 
-                        peer.add("giada"+", "+ token);
-                        //creo la chiave e la lista 
-                        infoRilevazioni.put(nomeRilevazione, peer);
-                    }else{
-                        //faccio una get per accedere alla lista 
-                        List<String> peers = infoRilevazioni.get(nomeRilevazione);
-                        peers.add("giada"+", "+ token);
+
+                }else if(raccoltaInput.contains("add")){
+                    /*
+                        * =================
+                        * Comando add
+                        * =================
+                        * Gestione la fase di aggiunta di una nuova risorsa condivisa dal client.
+                    */ 
+
+                    System.out.println("comando add ricevuto");
+                    String rilevazioneDaAggiungere = in.readLine();
+                    System.out.println("dati da aggiungere:   " + rilevazioneDaAggiungere ); 
+                    String[] dati = rilevazioneDaAggiungere.split(", ");
+                    String nomeRilevazione = dati[0]; 
+                    String token = dati[1];
+                    //inserisco nella struttura dati delle risorse
+                    synchronized(infoRilevazioni){
+                        if(!infoRilevazioni.containsKey(nomeRilevazione)){
+                            //non esiste la corrispondenza con la chiave
+                            //creo la lista che ospitera il peer e nuovi peer con la stessa risorsa 
+                            List<String> peer = new ArrayList<>();
+                            //nomeNodo cosi faccio una ricerca O(1) nella lista e recupero sia ip e porta partendo dal nome
+                            //token
+                            //riempo la lista 
+                            peer.add(this.nomeMacchina+":"+ token);
+                            //creo la chiave e la lista 
+                            infoRilevazioni.put(nomeRilevazione, peer);
+                            //aggiornamento della disponiblita 
+                            synchronized(disponibilitaRilevazione){
+                                disponibilitaRilevazione.put(nomeRilevazione, "DISPONIBILE");
+                            }
+                        }else{
+                            //faccio una get per accedere alla lista 
+                            List<String> peers = infoRilevazioni.get(nomeRilevazione);
+                            peers.add(this.nomeMacchina+":"+ token);
+                        }
                     }
-                }
-                out.println("RILEVAZIONE_AGGIUNTA");
+                    out.println("RILEVAZIONE_AGGIUNTA");
+                    System.out.println("Rilevazione aggiunta con successo.");
+
                 }else if (raccoltaInput.contains("download")){
-            /*
-                * =================
-                * Comando download
-                * =================
-                * Gestione della richiesta di download di una risorsa da parte del client.
-            */
+                /*
+                    * =================
+                    * Comando download
+                    * =================
+                    * Gestione della richiesta di download di una risorsa da parte del client.
+                */
                     String[] richiesta = raccoltaInput.split(",", 2);
                     String risorsa = richiesta.length == 2 ? richiesta[1].trim() : "";
+                    System.out.println("[SERVER] Comando download ricevuto per la risorsa: " + risorsa);
+                    List<String> peers = new ArrayList<>();
+                    //salvataggio nei log di sistema 
                     if (!risorsa.isEmpty()) {
                         String peerPossessore = trovaPossessore(risorsa);
                         gestoreLog.logDownload(risorsa, nomeMacchina, peerPossessore);
-                    }
-                }else if (raccoltaInput.contains(",")) {
-                    String[] nuovaRisorsa = raccoltaInput.split(",", 2);
-                    String nomeRisorsa = nuovaRisorsa[0].trim();
-                    String token = nuovaRisorsa[1].trim();
-                    if (!nomeRisorsa.isEmpty() && !token.isEmpty()) {
-                        synchronized (infoRilevazioni) {
-                            List<String> risorse = infoRilevazioni.get(nomeRisorsa);
-                            if (risorse == null) {
-                                risorse = new ArrayList<>();
-                                infoRilevazioni.put(nomeRisorsa, risorse);
-                            }
-                            risorse.add(nomeMacchina + ":" + token + ":DISPONIBILE");
+
+                        //recupero gli elementi delle rilevazioni.
+                        //accedo alla lista delle rilevazioni e verifico se la chiave esiste 
+                        if(!infoRilevazioni.containsKey(risorsa)){
+                            out.println("RILEVAZIONE_NON_TROVATA");
+                        }else{
+                                //raccolgo la lista dei peer che sono online 
+                                List<String> risorse = infoRilevazioni.get(risorsa);
+                                for(String peer : risorse){
+                                    String  recuperoPeerOnline [] = peer.split(":");
+                                    String nomePeer = recuperoPeerOnline[0];
+                                    String datiMacchina = infoMacchinaClient.get(nomePeer);
+                                    String [] credenzialiMacchina = datiMacchina.split(":");
+                                    String statoPeer = credenzialiMacchina[2];                                    
+                                    if(statoPeer.equals("ONLINE")){
+                                        //aggiungo alla lista dei peer disponibili  
+                                        //ricostruisco il peer in modo da avere nome ip porta token
+                                        String peerRiscostruito = nomePeer + ":" + credenzialiMacchina[0] + ":" + credenzialiMacchina[1] + ":" + recuperoPeerOnline[1]; 
+                                        System.out.println("peer ricostruito: " + peerRiscostruito);
+                                        peers.add(peerRiscostruito);
+                                    }
+                                }
+                                //dopo la preparazione della lista di pper connessi fino a quell'istante lancio i thread
+                                out.println("DOWNLOAD_INIZIATO");
+                                ServerSocket serverSocketDownload = new ServerSocket(0); //prendo la prima posta disponibile sul pc
+                                int portaDinamica = serverSocketDownload.getLocalPort();
+                                String ipServer = socket.getLocalAddress().getHostAddress();
+                                //inio delle credenziali al client per la connessione con il server dedicato all'invio continuato del peer
+                                out.println(ipServer + "," + portaDinamica);
+                                Socket socketDedicata = serverSocketDownload.accept();
+                                serverSocketDownload.close();
+                                BufferedReader inDownload = new BufferedReader(new java.io.InputStreamReader(socketDedicata.getInputStream()));
+                                PrintWriter outDownload = new PrintWriter(socketDedicata.getOutputStream(), true);
+                                System.out.println("[SERVER] Avvio del thread per la gestione del download della risorsa: " + risorsa);
+                                //Avvio del thread per la gestione del download della risorsa
+                                ThreadDownloaderPeer downloader = new ThreadDownloaderPeer(risorsa, peers, infoMacchinaClient, inDownload, outDownload, in, out);
+                                downloader.start();
                         }
                     }
                 }else if (raccoltaInput.contains("quit")){
@@ -358,7 +405,7 @@ public class GestioneClient extends Thread {
 
         for (String risorsa : risorse) {
             String[] dati = risorsa.split(":");
-            if (dati.length >= 3 && !dati[0].trim().isEmpty()) {
+            if (dati.length >= 2 && !dati[0].trim().isEmpty()) {
                 return dati[0];
             }
         }

@@ -1,6 +1,7 @@
 package client.comandi;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Map;
 import java.util.Scanner;
@@ -23,89 +24,82 @@ public class Add {
     }
 
     public synchronized void addRilevazione() {
-        System.out.println("========== [INIZIO ESECUZIONE COMANDO ADD] ==========");
 
         // Estraggo i parametri
         String comandoScelto = scomposizioneComando[0];
         String nomeRilevazione = scomposizioneComando[1];
         String valoreRilevazione = scomposizioneComando[2];
 
-        System.out.println("[INFO] Comando ricevuto: " + comandoScelto);
-        System.out.println("[INFO] Nome Rilevazione: '" + nomeRilevazione + "'");
-        System.out.println("[INFO] Valore Rilevazione: '" + valoreRilevazione + "'");
 
-        // Controllo duplicati in Mappa
-        System.out.println("[CHECK] Verifica presenza della rilevazione nella mappa locale...");
+
+
+        outServer.println(comandoScelto);//invio al server il comando scelto 
+
+        // Controllo inserimento nome duplicato
         if (!datiRilevazione.containsKey(nomeRilevazione)) {
-            System.out.println("[OK] -> Rilevazione NON presente in locale. Avvio processo di crittografia...");
 
             CrittografiaAES crittografia = new CrittografiaAES();
             String[] contenuto = crittografia.crittografaIlContenuto(valoreRilevazione);
 
-            // Verifico l'esito della crittografia PRIMA di accedere all'array
+            // Verifico l'esito della crittografia
             if (contenuto != null && contenuto.length == 2 && !contenuto[0].isEmpty()) {
                 
                 String contenutoCrittografato = contenuto[0]; 
                 String chiaveDecrittazione = contenuto[1];
 
-                System.out.println("[AES] Contenuto crittografato (Base64): " + contenutoCrittografato);
-                System.out.println("[AES] Chiave di decrittazione (Base64): " + chiaveDecrittazione);
-
-                // Creazione del file su disco
-                System.out.println("[FILE] Avvio creazione del file locale per: '" + nomeRilevazione + "'...");
+                // Creazione del file
                 CreazioneFile creazione = new CreazioneFile();
                 boolean controllo = creazione.creazioneFile(nomeRilevazione, contenutoCrittografato);
 
                 if (!controllo) {
-                    System.err.println("[ERRORE] Errore critico durante la creazione del file su disco!");
+                    System.err.println("Errrore nella creazione del file");
                 } else {
-                    System.out.println("[OK] -> File creato con successo su disco!");
                     //inserire i dati nelle liste 
-
-                    System.out.println("[INPUT] Come vuoi chiamare il token di sblocco per questa rilevazione?");
+                    System.out.println(" Come vuoi chiamare il token di sblocco?");
                     AssegnaToken nuovoToken = new AssegnaToken();
                     String token = sc.nextLine();
                     Boolean checkToken = true;
+                    String tokenValidato = "";
 
                     while(checkToken){
-                        String tokenValidato = nuovoToken.aggiungiToken(token, tokenSblocco).trim();
+                        tokenValidato = nuovoToken.aggiungiToken(token, tokenSblocco).trim();
                         if(tokenValidato.equals("TOKEN_ESISTENTE")){
-                            System.out.println("[WARNING] Token già esistente! Inserire un nuovo token nel terminale:");
+                            System.out.println("Token esistente, inserisci un nuovo token");
                             token = sc.nextLine();
                         }else{
-                            
+                            //aggiorno la tabella dei token cosi  da non renderlo riconoscibile 
                             synchronized(tokenSblocco){
-                                tokenSblocco.put(tokenValidato.toLowerCase(), chiaveDecrittazione); //aggiorno la tabella dei token cosi  da non renderlo riconoscibile 
+                                tokenSblocco.put(tokenValidato.toLowerCase(), chiaveDecrittazione); 
                             }
-
+                            // aggiorno la tabella delle risorse in possesso 
                             synchronized(datiRilevazione){
-                                datiRilevazione.put(nomeRilevazione, tokenValidato.toLowerCase()); // aggiorno la tabella delle risorse in possesso 
+                                datiRilevazione.put(nomeRilevazione, tokenValidato.toLowerCase()); 
                             }                            
                             checkToken = false;
                         }
                     }
 
-
-                    System.out.println("[LOG] Stato attuale Mappa Rilevazioni: " + datiRilevazione);
-
                     //invio al server della nuova rilevazione
-                    outServer.println(nomeRilevazione + ", " + token);
-                    System.out.println("[NET] -> Notifica inviata al Server: \"" + nomeRilevazione + ", " + token + "\"");
-
+                    outServer.println(nomeRilevazione + ", " + tokenValidato);
+                    String responseAggregator;
+                    try {
+                        responseAggregator = inServer.readLine();
+                        if(responseAggregator.equals("RILEVAZIONE_AGGIUNTA")){
+                            System.out.println("Rilevazione aggiunta correttamente");
+                        }   
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                 }
             } else {
-                System.err.println("[ERRORE] Fallimento del processo di crittografia AES.");
+                System.err.println("Errore nella fase di crittografia");
             }
 
         } else {
             // Caso rilevazione duplicata
-            System.out.println("[WARNING] Rilevazione già presente nella mappa locale!");
-            System.out.println("[NET] Invio notifica di errore al Server...");
+            System.out.println("Questa rilevazione esiste gia");
             
             outServer.println("Rilevazione gia presente");
-            System.out.println("[NET] -> Messaggio inviato al server: \"Rilevazione gia presente\"");
         }
-
-        System.out.println("========== [FINE ESECUZIONE COMANDO ADD] ==========\n");
     }
 }

@@ -24,11 +24,11 @@ public class ListDataRemote {
                     break; 
                 }
                 
-                System.out.println("- " + rigaRicevuta);
+                System.out.println(rigaRicevuta);
             }
         } catch (IOException e) {
             // Gestione errore se il server si disconnette
-            System.err.println("[ERRORE] Problema con il server durante la listdata remote");
+            System.err.println(" Problema con il server durante la listdata remote");
             //disconnessione 
         }
     }

@@ -123,7 +123,6 @@ public class ComandiClient extends Thread {
 
         //comandi
         while(secondowhile){
-
             System.out.println("[COMANDI] Comandi attivi");
             String comando = sc.nextLine();
             if(comando.contains("listdata local")){
@@ -174,14 +173,8 @@ public class ComandiClient extends Thread {
                     addRilevazioni.addRilevazione();
                 }                
 
-
-
-
-
-
-
             }else if(comando.contains("download")){
-                String scomposizioneComando [] = comando.split(" ",2);// salvo in blocchi di 3 le stringhe 
+                String scomposizioneComando [] = comando.split(" ",2);
                 String comandoScelto = scomposizioneComando[0];
                 String nomeFile = scomposizioneComando[1];
                 Download downloadRisorsa = new Download();

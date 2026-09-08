@@ -4,29 +4,42 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+/**
+ * ServerRilevazioni
+ * Thread che funge da server, ascolte le richieste di download da parte di altri peer/client/nodi
+ */
+
 public class ServerRilevazioni extends Thread {
     private int portaAggregator;
+    private Map<String,String> datiRilevazione;
+    private Map<String,String> tokenSblocco;
 
-    public ServerRilevazioni(int portaAggregator, BufferedReader inServer, PrintWriter outServer) {
+
+    public ServerRilevazioni(int portaAggregator, BufferedReader inServer, PrintWriter outServer, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco) {
         this.portaAggregator=portaAggregator;
+        this.datiRilevazione=datiRilevazione;
+        this.tokenSblocco=tokenSblocco;
     }
 
     @Override 
 
     public void run(){
-        System.out.println("Server avviato");
+        Boolean chiusuraForzata = false; //elemento importante per la fase di chiusura
         try{
             ServerSocket ss = new ServerSocket(3000);
-            LinkedBlockingQueue<Socket> listaSocekt = new LinkedBlockingQueue<>();
-            ThreadSmistamentoRichieste smistamento = new ThreadSmistamentoRichieste(listaSocekt);
+            //lista di socket 
+            List<Socket> listaSocekt = new ArrayList<>();
+            
+            ThreadSmistamentoRichieste smistamento = new ThreadSmistamentoRichieste(listaSocekt,datiRilevazione,tokenSblocco);
             smistamento.start();
-            while(true){
+            while(!chiusuraForzata){
                 Socket clientAccettato = ss.accept();
-                try{
-                    listaSocekt.put(clientAccettato);
-                }catch(InterruptedException e){
-                    System.out.println("Errore nella fase di caricamento dellélemento in lista");
+                synchronized(listaSocekt){
+                    listaSocekt.add(clientAccettato);
+                    listaSocekt.notify();
                 }
             }
           }catch(IOException e){

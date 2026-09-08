@@ -23,9 +23,6 @@ public class RecuperoDatiRilevazioni {
         //accedo al file rilecazioni/rilevazioni.txt
         //per ogni riga recuperare "nome valore"
         //dividere "nome valore" in nome e valore, iul valore sara crittografato in futuro
-
-        System.out.println("Lanciato il metodo di aggiornamento della Lista");
-
         File directory = new File("client/rilevazioni");    //accesso al file 
         File rilevazioni = new File(directory,"rilevazioni.txt");
         File token = new File(directory,"token.txt");    //accesso al file 
@@ -48,9 +45,6 @@ public class RecuperoDatiRilevazioni {
                 String valore= scomposizione[1];//valore
                 listaDati.put(nomeRilevazione, valore);
             }
-            System.out.println("Non ci sono piu righe da fetchare");
-            System.out.println("Dati recuperati" + datiRilevazione);
-            System.out.println("Dati recuperati token" + this.tokenSblocco);
 
 
         }catch(IOException expt){

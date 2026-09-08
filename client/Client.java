@@ -24,10 +24,11 @@ public class Client {
 
         //creazione struttura dati condivisa thread safe
 
-        Map<String,String> datiRilevazione  = new ConcurrentHashMap<>();//NOMEFILE > CHIAVE DECRITTAZIONE 
+        Map<String,String> datiRilevazione  = new ConcurrentHashMap<>();//NOMEFILE > TOKEN
         Map<String,String> tokenSblocco  = new ConcurrentHashMap<>();//TOKEN > CHIAVE DECRITTAZIONE
         RecuperoDatiRilevazioni recuperoRilevazioni = new RecuperoDatiRilevazioni(datiRilevazione,tokenSblocco);
         recuperoRilevazioni.caricamentoLista();// carico la lista di rilevazioni locali nella struttura dati
+
 
 
         //creazione varaibili
@@ -78,13 +79,14 @@ public class Client {
             System.out.println("Sei connesso al master");
 
             //avvio del thread dei comandi
-            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, porta, chiusura, socket, datiRilevazione, tokenSblocco);
+            int portaServerClient = 3000; //porta del server del client per ricevere richieste dai peer
+            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, portaServerClient, chiusura, socket, datiRilevazione, tokenSblocco);
             comandi.start();
             //avvio del server per effettuare la connessione P2P
-            ServerRilevazioni serverRilevazioni = new ServerRilevazioni(portaAggregator,inServer,outServer);
+            ServerRilevazioni serverRilevazioni = new ServerRilevazioni(portaAggregator,inServer,outServer, datiRilevazione, tokenSblocco);
             serverRilevazioni.start();
         } catch (IOException e) {
-            System.err.println("Errore: impossibile connettersi al master all'indirizzo porta o indirizzo sbagliato");
+            System.err.println("impossibile connettersi al master all'indirizzo porta o indirizzo sbagliato");
             chiusura.chiusuraMain(socket);
         }
     }

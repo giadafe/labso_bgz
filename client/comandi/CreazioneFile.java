@@ -11,36 +11,29 @@ import java.nio.file.Paths;
 public class CreazioneFile {
 
     public boolean creazioneFile(String nomeRilevazione, String contenutoCrittografato) {
-        System.out.println("=== INIZIO CREAZIONE FILE ===");
         
-        // Definiamo il percorso completo del file dentro la cartella "rilevazioni"
-        Path percorsoFile = Paths.get("rilevazioni", nomeRilevazione);
-        Path cartellaPadre = percorsoFile.getParent();
 
-        System.out.println("[LOG] Percorso destinazione file: " + percorsoFile.toAbsolutePath());
+        Path percorsoFile = Paths.get("rilevazioni", nomeRilevazione);
+        Path directory = percorsoFile.getParent();
+
 
         try {
-            // 1. Verifica ed eventuale creazione della directory madre "rilevazioni"
-            if (cartellaPadre != null && !Files.exists(cartellaPadre)) {
-                System.out.println("[LOG] Cartella '" + cartellaPadre + "' inesistente. Creazione in corso...");
-                Files.createDirectories(cartellaPadre);
-                System.out.println("[LOG] -> Cartella creata con successo!");
+
+            if (directory != null && !Files.exists(directory)) {
+                System.out.println("creazione della cartella");
+                Files.createDirectories(directory);
             } else {
-                System.out.println("[LOG] Cartella '" + cartellaPadre + "' già esistente.");
+
             }
 
-            // 2. Scrittura del contenuto cifrato nel file
-            System.out.println("[LOG] Scrittura del contenuto crittografato nel file...");
             Files.writeString(percorsoFile, contenutoCrittografato);
             
-            System.out.println("[LOG] -> File '" + nomeRilevazione + "' creato e salvato con successo!");
-            System.out.println("=== FILE CREATO CON SUCCESSO ===\n");
+            System.out.println("File creato con successo");
             return true;
 
         } catch (IOException e) {
-            System.err.println("[ERRORE] Processo di creazione del file fallito per: " + nomeRilevazione);
             e.printStackTrace();
-            System.out.println("=== CREAZIONE FILE FALLITA ===\n");
+            System.out.println("File non creato");
             return false;
         }
     }

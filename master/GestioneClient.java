@@ -330,7 +330,7 @@ public class GestioneClient extends Thread {
                     //salvataggio nei log di sistema 
                     if (!risorsa.isEmpty()) {
                         String peerPossessore = trovaPossessore(risorsa);
-                        gestoreLog.logDownload(risorsa, nomeMacchina, peerPossessore);
+
 
                         //recupero gli elementi delle rilevazioni.
                         //accedo alla lista delle rilevazioni e verifico se la chiave esiste 
@@ -366,7 +366,7 @@ public class GestioneClient extends Thread {
                                 PrintWriter outDownload = new PrintWriter(socketDedicata.getOutputStream(), true);
                                 System.out.println("[SERVER] Avvio del thread per la gestione del download della risorsa: " + risorsa);
                                 //Avvio del thread per la gestione del download della risorsa
-                                ThreadDownloaderPeer downloader = new ThreadDownloaderPeer(risorsa, peers, infoMacchinaClient, inDownload, outDownload, in, out);
+                                ThreadDownloaderPeer downloader = new ThreadDownloaderPeer(risorsa, peers, infoMacchinaClient, inDownload, outDownload, in, out, gestoreLog, nomeMacchina, peerPossessore);
                                 downloader.start();
                         }
                     }

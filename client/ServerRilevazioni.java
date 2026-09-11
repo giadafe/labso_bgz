@@ -16,12 +16,14 @@ public class ServerRilevazioni extends Thread {
     private int portaAggregator;
     private Map<String,String> datiRilevazione;
     private Map<String,String> tokenSblocco;
+    private ServerSocket ss;
 
 
-    public ServerRilevazioni(int portaAggregator, BufferedReader inServer, PrintWriter outServer, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco) {
+    public ServerRilevazioni(ServerSocket ss, int portaAggregator, BufferedReader inServer, PrintWriter outServer, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco) {
         this.portaAggregator=portaAggregator;
         this.datiRilevazione=datiRilevazione;
         this.tokenSblocco=tokenSblocco;
+        this.ss = ss;
     }
 
     @Override 
@@ -29,7 +31,6 @@ public class ServerRilevazioni extends Thread {
     public void run(){
         Boolean chiusuraForzata = false; //elemento importante per la fase di chiusura
         try{
-            ServerSocket ss = new ServerSocket(3000);
             //lista di socket 
             List<Socket> listaSocekt = new ArrayList<>();
             

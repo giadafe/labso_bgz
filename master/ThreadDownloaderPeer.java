@@ -25,17 +25,26 @@ public class ThreadDownloaderPeer extends Thread {
     private BufferedReader in;
     private PrintWriter out;
 
+    //elementi per gestire il log al successo
+    private GestoreLog gestoreLog;
+    private String nomeMacchina;
+    private String peerPossessore;
     public ThreadDownloaderPeer(String risorsa, List<String> peers, HashMap<String, String> infoMacchinaClient,
                           BufferedReader inDownload, PrintWriter outDownload, 
-                          BufferedReader in, PrintWriter out) {
+                          BufferedReader in, PrintWriter out, GestoreLog gestoreLog, String nomeMacchina, String peerPossessore) {
         
         this.risorsa = risorsa;
         this.peers = peers;
         this.infoMacchinaClient = infoMacchinaClient;
         this.inDownload = inDownload;
         this.outDownload = outDownload;
+        
         this.in = in;
         this.out = out;
+
+        this.gestoreLog = gestoreLog;
+        this.nomeMacchina = nomeMacchina;
+        this.peerPossessore = peerPossessore;
     }
 
     @Override
@@ -62,6 +71,7 @@ public class ThreadDownloaderPeer extends Thread {
                 }
 
                 if (rispostaClient.equals("DOWNLOAD_RIUSCITO")) {
+                    gestoreLog.logDownload(risorsa, nomeMacchina, peerPossessore);
                     System.out.println("[SERVER] Download completato con successo dal client!");
                     break;
                 }

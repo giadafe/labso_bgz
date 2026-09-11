@@ -38,7 +38,7 @@ public class GestioneMacchine {
 
 
 
-    //quando il server si accende fa a prendere i dati delle macchine registrate con nome -> (ip porta)
+    //quando il server si accende fa a prendere i dati delle macchine registrate con nome -> (ip porta, stato)
     public void recuperoMacchine(){
         File file = new File("master/dataMacchine/macchineRegistrate.txt");
         if (file.exists()) {
@@ -47,7 +47,7 @@ public class GestioneMacchine {
                     while((riga = letturaFile.readLine())!= null){
                         String [] macchineSalvate = riga.split(":");
                         String chiave = macchineSalvate[0]; //nomeMacchina
-                        String valore = macchineSalvate[1]+":"+macchineSalvate[2]; //ip[1] porta[2]
+                        String valore = macchineSalvate[1]+":"+macchineSalvate[2]+":"+macchineSalvate[3] ; //ip[1] porta[2] stato[3]
                         registroMacchina.put(chiave, valore); //salvataggio diretto
                     }
             System.out.println("[BACKUP] Ripristinate " + registroMacchina.size() + " macchine.");

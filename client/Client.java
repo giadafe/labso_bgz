@@ -47,7 +47,7 @@ public class Client {
         //se la macchina ha un suo nome salvato, allora salto la fase di registrazione della macchina con il Master
 
         String controlloNome = credenziale.nomeMacchina();
-        int porta = portaAggregator;
+
 
         //recupero indirizzo IP
         try {
@@ -57,6 +57,17 @@ public class Client {
             e.printStackTrace();
         }
 
+
+        int portaServerRilevazione = 0;
+        ServerSocket ss = null;            
+        try {
+            ss = new ServerSocket(0);
+            portaServerRilevazione = ss.getLocalPort();
+            System.out.println("Porta generata random: "+ portaServerRilevazione);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+            
         try {
             socket = new Socket(ipAggregator, portaAggregator);
             System.out.println("Connesso! Ora puoi inviare messaggi al master");
@@ -79,12 +90,12 @@ public class Client {
             System.out.println("Sei connesso al master");
 
             //avvio del thread dei comandi
-            int portaServerClient = 3000; //porta del server del client per ricevere richieste dai peer
-            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, portaServerClient, chiusura, socket, datiRilevazione, tokenSblocco);
+            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, portaServerRilevazione, chiusura, socket, datiRilevazione, tokenSblocco);
             comandi.start();
             //avvio del server per effettuare la connessione P2P
-            ServerRilevazioni serverRilevazioni = new ServerRilevazioni(portaAggregator,inServer,outServer, datiRilevazione, tokenSblocco);
+            ServerRilevazioni serverRilevazioni = new ServerRilevazioni(ss,portaAggregator,inServer,outServer, datiRilevazione, tokenSblocco);
             serverRilevazioni.start();
+
         } catch (IOException e) {
             System.err.println("impossibile connettersi al master all'indirizzo porta o indirizzo sbagliato");
             chiusura.chiusuraMain(socket);

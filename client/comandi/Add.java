@@ -55,17 +55,17 @@ public class Add {
                     System.err.println("Errrore nella creazione del file");
                 } else {
                     //inserire i dati nelle liste 
-                    System.out.println(" Come vuoi chiamare il token di sblocco?");
+                    System.out.println(" Generazione del token per mascherare la chiave di sblocco AES");
                     AssegnaToken nuovoToken = new AssegnaToken();
-                    String token = sc.nextLine();
+                    String token = nuovoToken.generaTokenCasuale();
                     Boolean checkToken = true;
                     String tokenValidato = "";
 
                     while(checkToken){
-                        tokenValidato = nuovoToken.aggiungiToken(token, tokenSblocco).trim();
+                        tokenValidato = nuovoToken.aggiungiToken(token, tokenSblocco ).trim();
                         if(tokenValidato.equals("TOKEN_ESISTENTE")){
                             System.out.println("Token esistente, inserisci un nuovo token");
-                            token = sc.nextLine();
+                            token = nuovoToken.generaTokenCasuale();
                         }else{
                             //aggiorno la tabella dei token cosi  da non renderlo riconoscibile 
                             synchronized(tokenSblocco){

@@ -3,9 +3,15 @@ package client.comandi;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Map;
+import java.util.Scanner;
 
 /**
  * ThreadDownload 
@@ -19,9 +25,12 @@ public class ThreadDownload extends Thread {
     BufferedReader inServer;
     Socket socketDownload;
     String nomeFile;
+    Map<String,String> datiRilevazione;
+    Map<String,String> tokenSblocco;
+    Scanner sc;
 
 
-    public ThreadDownload(String nomeFile, PrintWriter outServer, BufferedReader inServer, BufferedReader inComunicazioneDownload, PrintWriter outComunicazioneDownload, Socket socketDownload) {
+    public ThreadDownload(String nomeFile, PrintWriter outServer, BufferedReader inServer, BufferedReader inComunicazioneDownload, PrintWriter outComunicazioneDownload, Socket socketDownload, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco, Scanner sc) {
         this.nomeFile = nomeFile;
         //comunicazione con il controller dell'Aggregator
         this.outServer = outServer;
@@ -31,6 +40,10 @@ public class ThreadDownload extends Thread {
         this.inComunicazioneDownload = inComunicazioneDownload;
         this.outComunicazioneDownload = outComunicazioneDownload;
         this.socketDownload = socketDownload;
+        //--------------
+        this.tokenSblocco = tokenSblocco;
+        this.datiRilevazione = datiRilevazione;
+        this.sc = sc;
     }
 
 
@@ -78,6 +91,19 @@ public class ThreadDownload extends Thread {
                         outComunicazioneDownload.println("DOWNLOAD_FALLITO");  // l'aggregator deve mandare un nuovo peer 
                     }else{
                         outComunicazioneDownload.println("DOWNLOAD_RIUSCITO"); // il server deve finire la fase di inivio di peer
+                        //inserimento della rilevazione con add
+                        //accedo al file appena creato e ne recupero il contenuto.
+                        try{
+                            Path pathFile = Paths.get("client/rilevazioniScaricate", nomeFile);
+                            String contenuto = Files.readString(pathFile);
+                            String[] scomposizione = {"add", nomeFile ,contenuto};
+                            Add aggiungiRilevazione = new Add(scomposizione, inServer, outServer, datiRilevazione, sc, tokenSblocco);
+                            aggiungiRilevazione.addRilevazione();
+                        } catch (IOException e) {
+
+                        }
+
+
                         statoDownload = false;
                     }
 

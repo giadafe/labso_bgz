@@ -178,7 +178,7 @@ public class ComandiClient extends Thread {
                 String comandoScelto = scomposizioneComando[0];
                 String nomeFile = scomposizioneComando[1];
                 Download downloadRisorsa = new Download();
-                downloadRisorsa.scarica(nomeFile, outServer, inServer, comandoScelto);
+                downloadRisorsa.scarica(nomeFile, outServer, inServer, comandoScelto, datiRilevazione, tokenSblocco, sc);
 
             }else if(comando.equals("quit")){
                 //chiudere tutti i thread  e terminare il main

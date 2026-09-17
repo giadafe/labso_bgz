@@ -2,11 +2,13 @@ package client.comandi;
 
 import java.io.*;
 import java.net.Socket;
+import java.util.Map;
+import java.util.Scanner;
 
 // Classe che permette al client di mandare la richiesta di download 
 public class Download {
 
-    public void scarica(String nomeFile, PrintWriter outServer, BufferedReader inServer, String comandoScelto) {
+    public void scarica(String nomeFile, PrintWriter outServer, BufferedReader inServer, String comandoScelto, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco, Scanner sc) {
         outServer.println(comandoScelto + ", " + nomeFile);
         outServer.flush();
 
@@ -32,7 +34,7 @@ public class Download {
                 BufferedReader inDownload = new BufferedReader(new InputStreamReader(socketDownloadAggregator.getInputStream()));
                 PrintWriter outDownload = new PrintWriter(socketDownloadAggregator.getOutputStream(), true);
                 //avvio del thread che opera in modo separato per rcevere i peer e tentare la connessione con loro
-                ThreadDownload threadDownload = new ThreadDownload(nomeFile, outServer, inServer, inDownload, outDownload, socketDownloadAggregator);
+                ThreadDownload threadDownload = new ThreadDownload(nomeFile, outServer, inServer, inDownload, outDownload, socketDownloadAggregator, datiRilevazione, tokenSblocco, sc);
                 threadDownload.start();
             }
         }catch(IOException e){

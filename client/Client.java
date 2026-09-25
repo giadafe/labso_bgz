@@ -90,7 +90,7 @@ public class Client {
             System.out.println("Sei connesso al master");
 
             //avvio del thread dei comandi
-            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, portaServerRilevazione, chiusura, socket, datiRilevazione, tokenSblocco);
+            ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, portaServerRilevazione, chiusura, socket, datiRilevazione, tokenSblocco, salvataggio);
             comandi.start();
             //avvio del server per effettuare la connessione P2P
             ServerRilevazioni serverRilevazioni = new ServerRilevazioni(ss,portaAggregator,inServer,outServer, datiRilevazione, tokenSblocco);

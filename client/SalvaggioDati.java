@@ -1,11 +1,19 @@
 package client;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class SalvaggioDati {
+    //salvataggio del nome del nodo/macchina ]
+
+
+
 
     public void salvataggio(String nomeMacchina) {
         File directory = new File("client/rilevazioni");
@@ -32,5 +40,59 @@ public class SalvaggioDati {
     }
 
 
-    // aggiungere il metodo che permette il salvataggio della risorsa in  un hashmap String String => nomeRilevazioni : nomeMacchina, risultatoRilevazione.
+
+
+
+
+
+    //salvataggio delle rilevazioni in locale
+    public void salvataggioDatiRilevazioni(Map<String,String> datiRilevazione){ //nome > token
+        List<String> stringheSalvataggio = new ArrayList<>();
+        synchronized(datiRilevazione){
+            for(String k : datiRilevazione.keySet()){
+                String valore = datiRilevazione.get(k);
+                String concatenzaione = k + ":"+ valore;
+                stringheSalvataggio.add(concatenzaione);
+            }
+            File drectory = new File("client/rilevazioni");
+            File file = new File(drectory, "rilevazioni.txt");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                for (String riga : stringheSalvataggio) {
+                    writer.write(riga);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+
+
+
+
+
+    //salvataggio dei token in locale
+    public void salvataggioTokenRilevazioni(Map<String,String> tokenSblocco){ //token > chiave
+        List<String> listaToken  = new ArrayList<>();
+        synchronized(tokenSblocco){
+            for(String t : tokenSblocco.keySet()){
+                String valore = tokenSblocco.get(t);
+                String concatenzaione = t + ":"+ valore;
+                listaToken.add(concatenzaione);
+            }
+
+            File drectory = new File("client/rilevazioni");
+            File file = new File(drectory, "token.txt");
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+                for (String riga : listaToken) {
+                    writer.write(riga);
+                    writer.newLine();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
 }

@@ -1,20 +1,25 @@
 package master;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class GestioneMacchine {
     public Map<String, String> registroMacchina;
+    public HashMap<String,List<String>> infoRilevazioni;
 
 
-
-    public GestioneMacchine(Map<String, String> registroMacchina){
+    public GestioneMacchine(Map<String, String> registroMacchina, HashMap<String,List<String>> infoRilevazioni){
         this.registroMacchina = registroMacchina;
+        this.infoRilevazioni = infoRilevazioni;
     }
 
 
@@ -58,13 +63,81 @@ public class GestioneMacchine {
     }
 
 
-    //metodo per il recupero dei dati delle rilevazioni 
-    public void salvataggioDatiRilevazioni(){
+
+
+
+
+
+
+
+    //salvataggio della hashmap in locale delle rilevazioni
+    public synchronized void salvataggioDatiRilevazioni(HashMap<String,List<String>> infoRilevazioni){
+        List<String> listaPeerLocale = new ArrayList<>();
+        for(String chiave : infoRilevazioni.keySet()){
+            //recupero la lista di peer associati
+            List<String> listaPeer = infoRilevazioni.get(chiave);
+            String rigaSalvataggio = chiave + "|" + String.join("|", listaPeer);
+            listaPeerLocale.add(rigaSalvataggio);
+        }
+        //salvataggio nel file locale
+        File file = new File("master/dataMacchine/infoRilevazione.txt");
+        try (BufferedWriter  scritturaFile = new BufferedWriter (new FileWriter(file))) {
+            for(String riga : listaPeerLocale){
+                scritturaFile.write(riga);
+                scritturaFile.newLine();
+            }
+            System.out.println("Rilevazioni salvate in locale");
+        }catch(IOException expt){
+            expt.printStackTrace();
+        }
 
     }
 
-    public void recuperoDatiRilevazioni(){
-        
-    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // recupero delle rilevazioni in locale
+        public void recuperoDatiRilevazioni(){
+            File file = new File("master/dataMacchine/infoRilevazioni.txt");
+            if(file.exists()){
+                try (BufferedReader letturaFile = new BufferedReader(new FileReader(file))) {
+
+                    String riga;
+
+                    while((riga = letturaFile.readLine()) != null){
+                        String[] rilevazioniRecuperate = riga.split("\\|");
+                        String chiave = rilevazioniRecuperate[0];
+                        List<String> listaPeer = new ArrayList<>();
+                        for(int i = 1; i < rilevazioniRecuperate.length; i++){
+                            listaPeer.add(rilevazioniRecuperate[i]);
+                        }
+                        infoRilevazioni.put(chiave, listaPeer);
+                    }
+                } catch(IOException expt){
+                    expt.printStackTrace();
+                }
+            }
+        }
+
+
+
+
+
+
+
 
 }

@@ -12,12 +12,10 @@ public class ChiusuraSocket {
     public void chiusuraConnessioneThreadComando(Socket socket, Boolean primoWhile, Boolean secondoWhile){
         if(primoWhile == true){
             chiusura(socket);
-            primoWhile = false;
         }
 
         if(secondoWhile == true){
             chiusura(socket);
-            secondoWhile=false;
         }
 
     }

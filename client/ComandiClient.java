@@ -29,9 +29,9 @@ public class ComandiClient extends Thread {
     public Socket socket;
     public Map<String,String> datiRilevazione;
     public Map<String,String> tokenSblocco;
+    public SalvaggioDati salvataggio;
 
-
-    public ComandiClient(BufferedReader inServer, PrintWriter outServer, String nomeMacchina, Scanner sc, String stato, String ip, int porta, ChiusuraSocket chiusura, Socket socket, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco) {
+    public ComandiClient(BufferedReader inServer, PrintWriter outServer, String nomeMacchina, Scanner sc, String stato, String ip, int porta, ChiusuraSocket chiusura, Socket socket, Map<String,String> datiRilevazione, Map<String,String> tokenSblocco, SalvaggioDati salvataggio) {
         this.nomeMacchina = nomeMacchina;
         this.inServer = inServer;
         this.outServer = outServer;
@@ -43,6 +43,7 @@ public class ComandiClient extends Thread {
         this.socket=socket;
         this.datiRilevazione= datiRilevazione;
         this.tokenSblocco= tokenSblocco;
+        this.salvataggio = salvataggio;
     }
     
     @Override
@@ -182,7 +183,43 @@ public class ComandiClient extends Thread {
 
             }else if(comando.equals("quit")){
                 //chiudere tutti i thread  e terminare il main
-            }else{
+                outServer.println(comando);
+                String risposta;
+                try {
+                    risposta = inServer.readLine();
+                    if(risposta.contains("disconnesso")){
+                        //salvataggio della hashmap in locale 
+                        salvataggio.salvataggioDatiRilevazioni(datiRilevazione);
+                        salvataggio.salvataggioTokenRilevazioni(tokenSblocco);
+                        chiusura.chiusuraConnessioneThreadComando(socket, primowhile, secondowhile);
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+            } else if (comando.contains("test")) {
+                    System.out.println("\n========== [TEST] Stato delle liste ==========");
+
+                    System.out.println("--- datiRilevazione (NOMEFILE -> TOKEN) ---");
+                    if (datiRilevazione.isEmpty()) {
+                        System.out.println("  (vuota)");
+                    } else {
+                        for (Map.Entry<String, String> entry : datiRilevazione.entrySet()) {
+                            System.out.println("  " + entry.getKey() + " -> " + entry.getValue());
+                        }
+                    }
+
+                    System.out.println("--- tokenSblocco (TOKEN -> CHIAVE) ---");
+                    if (tokenSblocco.isEmpty()) {
+                        System.out.println("  (vuota)");
+                    } else {
+                        for (Map.Entry<String, String> entry : tokenSblocco.entrySet()) {
+                            System.out.println("  " + entry.getKey() + " -> " + entry.getValue());
+                        }
+                    }
+
+                    System.out.println("================================================\n");
+                }else{
                 System.out.println("comando inserito sbagliato");
             }
         }  

@@ -27,10 +27,10 @@ public class GestioneClient extends Thread {
     private String nomeMacchina = "";
     private HashMap<String, String> disponibilitaRilevazione;
     private HashMap<String, Socket> socketClient;
-
+    private GestioneMacchine gestione;
     public GestioneClient(Socket socket, BufferedReader in, PrintWriter out,
             HashMap<String, String> infoMacchinaClient, HashMap<String, List<String>> infoRilevazioni,
-            GestoreLog gestoreLog, HashMap<String, String> disponibilitaRilevazione, HashMap<String, Socket> socketClient) {
+            GestoreLog gestoreLog, HashMap<String, String> disponibilitaRilevazione, HashMap<String, Socket> socketClient, GestioneMacchine gestione) {
         //inizializzo variabili
         this.socket = socket;
         this.in = in;
@@ -40,6 +40,7 @@ public class GestioneClient extends Thread {
         this.gestoreLog = gestoreLog;
         this.disponibilitaRilevazione = disponibilitaRilevazione;
         this.socketClient = socketClient;
+        this.gestione = gestione;
     }
 
     @Override
@@ -62,7 +63,7 @@ public class GestioneClient extends Thread {
     * -se il nodo e nuovo allora crea la entry, come new nomeNodo IP PORTA
     */
 
-    GestioneMacchine gestione = new GestioneMacchine(infoMacchinaClient); // classe che si occupa di salvare i dati della macchina allínterno della struttura dati
+     // classe che si occupa di salvare i dati della macchina allínterno della struttura dati
     boolean primoWhile = true;
     while(primoWhile){
             try {
@@ -81,27 +82,30 @@ public class GestioneClient extends Thread {
                         String outnomeMacchina = in.readLine();
                         System.out.println("[SERVER] Ricevuto nome macchina da verificare: " + outnomeMacchina);
                         //controllo il nome cone le chiavi degli utenti esistenti nella lista concorrente
-                        if(infoMacchinaClient.containsKey(outnomeMacchina)){
-                            System.out.println("[SERVER] LA MACCHINA E NUOVA, MA CON IL NOME DUPLICATO: " + outnomeMacchina);
-                            out.println("nomeMacchina_DUPLICATO");
-                        }else{
-                            System.out.println("[SERVER] LA MACCHINA E NUOVA, MA IL NOME E NUOVO: " + outnomeMacchina);
-                            out.println("nomeMacchina_VALIDA"); 
-                            this.nomeMacchina = outnomeMacchina;
-                            System.out.println("[SERVER] In attesa delle credenziali per " + outnomeMacchina + "...");
-                            String credenziali = in.readLine();
-                            String [] divisione = credenziali.split(" ");
-                            System.out.println("[SERVER] Ricevute credenziali: IP=" + divisione[0] + " PORTA=" + divisione[1]);
-                            String credenzialiFormattate = divisione[0] + ":" + divisione[1] + ":" + "ONLINE"; //unione delle credenziali con :per la leggibilita
-                            //salvataggio nella hashmap 
-                            infoMacchinaClient.put(outnomeMacchina, credenzialiFormattate);
-                            socketClient.put(outnomeMacchina, socket);
+                        synchronized(infoMacchinaClient){
+                            if(infoMacchinaClient.containsKey(outnomeMacchina)){
+                                System.out.println("[SERVER] LA MACCHINA E NUOVA, MA CON IL NOME DUPLICATO: " + outnomeMacchina);
+                                out.println("nomeMacchina_DUPLICATO");
+                            }else{
+                                System.out.println("[SERVER] LA MACCHINA E NUOVA, MA IL NOME E NUOVO: " + outnomeMacchina);
+                                out.println("nomeMacchina_VALIDA"); 
+                                this.nomeMacchina = outnomeMacchina;
+                                System.out.println("[SERVER] In attesa delle credenziali per " + outnomeMacchina + "...");
+                                String credenziali = in.readLine();
+                                String [] divisione = credenziali.split(" ");
+                                System.out.println("[SERVER] Ricevute credenziali: IP=" + divisione[0] + " PORTA=" + divisione[1]);
+                                String credenzialiFormattate = divisione[0] + ":" + divisione[1] + ":" + "ONLINE"; //unione delle credenziali con :per la leggibilita
+                                //salvataggio nella hashmap 
+                                infoMacchinaClient.put(outnomeMacchina, credenzialiFormattate);
+                                socketClient.put(outnomeMacchina, socket);
 
-                            //TEST salvataggio in locale
-                            gestione.salvaMacchine();
-                            System.out.println("[DATABASE] Macchina registrata con successo: " + outnomeMacchina);
-                            primoWhile = false;
+                                //TEST salvataggio in locale
+                                gestione.salvaMacchine();
+                                System.out.println("[DATABASE] Macchina registrata con successo: " + outnomeMacchina);
+                                primoWhile = false;
+                            }
                         }
+
                     } catch (IOException e) {
                         System.err.println("[ERRORE] Errore durante la lettura del nome o delle credenziali.");
                         e.printStackTrace();
@@ -127,7 +131,9 @@ public class GestioneClient extends Thread {
                     }
                     infoMacchinaClient.put(outnomeMacchinaDaAggiornare, credenzialiDaAggiornare);
                     gestione.salvaMacchine();
-                    socketClient.put(outnomeMacchinaDaAggiornare, socket); // salviamo il socket del client cosi da facilitare l'operazione di quit
+                    synchronized(socketClient){
+                        socketClient.put(outnomeMacchinaDaAggiornare, socket); // salviamo il socket del client cosi da facilitare l'operazione di quit
+                    }
                     primoWhile = false;
 
                 }
@@ -135,7 +141,7 @@ public class GestioneClient extends Thread {
                 System.err.println("[ERRORE] Errore di comunicazione con il client.");
                 e.printStackTrace();
             } 
-        }
+    }
 
 
 
@@ -181,14 +187,15 @@ public class GestioneClient extends Thread {
                 String token = scomposizione[1];
                 String composizioneStringa = this.nomeMacchina + ":" + token;
 
+                synchronized(infoRilevazioni){
                 List<String> lista = infoRilevazioni.get(nomeRilevazione);
-
-                if (lista == null) {
-                    lista = new ArrayList<>();
-                    infoRilevazioni.put(nomeRilevazione, lista);
-                    disponibilitaRilevazione.put(nomeRilevazione, "DISPONIBILE");
+                    if (lista == null) {
+                        lista = new ArrayList<>();
+                        infoRilevazioni.put(nomeRilevazione, lista);
+                        disponibilitaRilevazione.put(nomeRilevazione, "DISPONIBILE");
+                    }
+                    lista.add(composizioneStringa);
                 }
-                lista.add(composizioneStringa);
             }
 
         } catch (IOException e) {
@@ -366,19 +373,38 @@ public class GestioneClient extends Thread {
                                 PrintWriter outDownload = new PrintWriter(socketDedicata.getOutputStream(), true);
                                 System.out.println("[SERVER] Avvio del thread per la gestione del download della risorsa: " + risorsa);
                                 //Avvio del thread per la gestione del download della risorsa
-                                ThreadDownloaderPeer downloader = new ThreadDownloaderPeer(risorsa, peers, infoMacchinaClient, inDownload, outDownload, in, out, gestoreLog, nomeMacchina, peerPossessore);
+                                ThreadDownloaderPeer downloader = new ThreadDownloaderPeer(risorsa, peers, infoMacchinaClient, inDownload, outDownload, in, out, gestoreLog, nomeMacchina, peerPossessore, infoRilevazioni);
                                 downloader.start();
                         }
                     }
-                }else if (raccoltaInput.contains("quit")){
-            /*
-                * =================
-                * Comando quit
-                * =================
-                * Gestione della disconnessione del client.
-                * 
-            */ 
-                gestioneRichieste = false; //esco dal ciclo while
+                }else if(raccoltaInput.contains("quit")){
+                /*
+                    * =================
+                    * Comando quit
+                    * =================
+                    * Gestione della disconnessione del client.
+                    * 
+                */ 
+                    out.println("disconnesso");
+                    socket.close();
+                    //aggiornare ad offline il client
+                    synchronized(infoMacchinaClient){
+                        if(infoMacchinaClient.containsKey(this.nomeMacchina)){
+                            String nodo = infoMacchinaClient.get(this.nomeMacchina);
+                            String [] scomposizioneNodo = nodo.split(":");
+                            String statoModificato = scomposizioneNodo[0] + scomposizioneNodo[1] + "OFFLINE";
+                            infoMacchinaClient.put(this.nomeMacchina, statoModificato);
+                        }
+                    }
+
+                    //togliere dalla lista di socket il socket appartenente il nome del nodo
+                    synchronized(socketClient){
+                        if(socketClient.containsKey(this.nomeMacchina)){
+                            socketClient.remove(this.nomeMacchina);
+                        }
+                    }
+                    
+                    gestioneRichieste = false; //esco dal ciclo while che termina il thread
                 }else{
                     System.out.println("Comando non valido: " + raccoltaInput);
                 }

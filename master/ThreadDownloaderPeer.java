@@ -29,9 +29,10 @@ public class ThreadDownloaderPeer extends Thread {
     private GestoreLog gestoreLog;
     private String nomeMacchina;
     private String peerPossessore;
+    private HashMap<String,List<String>> infoRilevazioni;
     public ThreadDownloaderPeer(String risorsa, List<String> peers, HashMap<String, String> infoMacchinaClient,
                           BufferedReader inDownload, PrintWriter outDownload, 
-                          BufferedReader in, PrintWriter out, GestoreLog gestoreLog, String nomeMacchina, String peerPossessore) {
+                          BufferedReader in, PrintWriter out, GestoreLog gestoreLog, String nomeMacchina, String peerPossessore, HashMap<String,List<String>> infoRilevazioni) {
         
         this.risorsa = risorsa;
         this.peers = peers;
@@ -45,6 +46,8 @@ public class ThreadDownloaderPeer extends Thread {
         this.gestoreLog = gestoreLog;
         this.nomeMacchina = nomeMacchina;
         this.peerPossessore = peerPossessore;
+
+        this.infoRilevazioni = infoRilevazioni;
     }
 
     @Override
@@ -67,12 +70,53 @@ public class ThreadDownloaderPeer extends Thread {
                     System.out.println("[SERVER] Download fallito dal client!");
 
                     peers.remove(peer);
+
+
+                    String peerDaRimuovere = null;
                     //rimozione da infoRilevazioni
+                    synchronized(infoRilevazioni){
+                        if(infoRilevazioni.containsKey(risorsa)){
+                            //recupero tutta la lista di peer 
+                            List<String> listaPeer = infoRilevazioni.get(risorsa);
+                            //ciclo la lista e accedo al primo parametro 
+                            for(String n : listaPeer){
+                                String peerDaCancellare [] = n.split(":");
+                                String nomeNodo = peerDaCancellare[0];
+                                //recupero il peer appena mandato e lo frammento 
+                                String peerInviato [] = peer.split(":");
+                                String nomePeer = peerInviato[0];
+                                if(nomeNodo.equals(nomePeer)){
+                                    peerDaRimuovere = n;
+                                    break;
+                                }
+                            }
+
+                            if(peerDaRimuovere != null){
+                                boolean cancellato = listaPeer.remove(peerDaRimuovere);
+                                System.out.println("[SERVER] Peer " + peerDaRimuovere + " rimosso da infoRilevazioni: " + cancellato);
+
+                                if(listaPeer.isEmpty()){
+                                    infoRilevazioni.remove(risorsa);
+                                    System.out.println("[SERVER] Risorsa " + risorsa +" rimossa perché non ha più peer.");
+                                }
+
+                            }
+
+                            
+                        }
+                    }
+
                 }
+
+
+
+
 
                 if (rispostaClient.equals("DOWNLOAD_RIUSCITO")) {
                     gestoreLog.logDownload(risorsa, nomeMacchina, peerPossessore);
                     System.out.println("[SERVER] Download completato con successo dal client!");
+                    //azzeraMENTO della lista dei peer 
+                    peers.clear();
                     break;
                 }
             } catch (IOException e) {

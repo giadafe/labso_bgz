@@ -40,7 +40,7 @@ public class RecuperoDatiRilevazioni {
         try(BufferedReader letturaRighe = new BufferedReader(new FileReader(tipologia))){
             String rilevazione;
             while((rilevazione = letturaRighe.readLine())!=null){
-                String [] scomposizione = rilevazione.split(" "); // creo un array "nome valore"
+                String [] scomposizione = rilevazione.split(":"); // creo un array "nome valore"
                 String nomeRilevazione = scomposizione[0]; //nome 
                 String valore= scomposizione[1];//valore
                 listaDati.put(nomeRilevazione, valore);

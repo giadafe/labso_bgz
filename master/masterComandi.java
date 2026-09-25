@@ -11,13 +11,17 @@ import java.util.*;
  */
 public class masterComandi implements Runnable {
     public ServerSocket ss;
-    private Map<String, List<String>> infoRilevazioni;
+    private HashMap<String, List<String>>infoRilevazioni;
     private GestoreLog gestoreLog;
+    private HashMap<String,Socket>  socketClient;
+    private GestioneMacchine gestione;
 
-    public masterComandi(ServerSocket ss, Map<String, List<String>> infoRilevazioni, GestoreLog gestoreLog) {
+    public masterComandi(ServerSocket ss, HashMap<String, List<String>> infoRilevazioni, GestoreLog gestoreLog, HashMap<String,Socket> socketClient, GestioneMacchine gestione) {
         this.ss = ss;
         this.infoRilevazioni = infoRilevazioni;
         this.gestoreLog = gestoreLog;
+        this.socketClient = socketClient;
+        this.gestione=gestione;
     }
     /**
      * ==========
@@ -79,6 +83,17 @@ public class masterComandi implements Runnable {
                     //chiusura del ciclo while e del server socket
                     stato = false;
                     try {
+                        //chiudere tutti i socket
+                        synchronized(socketClient){
+                            for(String nomeNodo : socketClient.keySet()){
+                                Socket socketDaChiudere = socketClient.get(nomeNodo);
+                                socketDaChiudere.close();
+                            }
+                            socketClient.clear();
+                        }
+                        //salvataggio in locale della tabella inforilevazioni, infomacchina e disponibilita
+                        gestione.salvataggioDatiRilevazioni(infoRilevazioni);
+                        gestione.salvaMacchine();
                         ss.close();
                         System.out.println("[SERVER:] Connessione chiusa.");
                         System.exit(0);

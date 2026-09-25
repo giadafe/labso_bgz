@@ -43,8 +43,13 @@ public class Master {
 		ServerSocket ss = new ServerSocket(port);
 		System.out.println("ServerSocket in ascolto sulla porta " + port + "...");
 
+		////////////////////////////
+		GestioneMacchine gestione = new GestioneMacchine(infoMacchinaClient, infoRilevazioni);
+		gestione.recuperoDatiRilevazioni();
+		gestione.recuperoMacchine();
+
 		// Fase di avvio del thread per la gestione dei comandi del Master
-		Thread masterComandi = new Thread(new masterComandi(ss, infoRilevazioni, gestoreLog));
+		Thread masterComandi = new Thread(new masterComandi(ss, infoRilevazioni, gestoreLog, socketClient, gestione));
 		masterComandi.start();
 
 		//Fase di accettazione delle connessioni in ingresso dai client peer
@@ -59,9 +64,8 @@ public class Master {
 				
 				//Fase di avvio del thread per la gestione delle richieste dei client peer
 				
-				GestioneClient ThreadRichieste = new GestioneClient(socket, in, out, infoMacchinaClient, infoRilevazioni,
-						gestoreLog,disponibilitaRilevazione ,socketClient);
-				
+				GestioneClient ThreadRichieste = new GestioneClient(socket, in, out, infoMacchinaClient, infoRilevazioni,gestoreLog,disponibilitaRilevazione ,socketClient, gestione);
+			
 				ThreadRichieste.start();
 			}
 

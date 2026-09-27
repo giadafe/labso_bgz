@@ -1,4 +1,4 @@
-package master;
+package aggregator;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -12,24 +12,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class GestioneMacchine {
-    public Map<String, String> registroMacchina;
+public class GestioneFile {
+    public Map<String, String> registroNodo; //nomeMacchina -> ip, porta, stato
     public HashMap<String,List<String>> infoRilevazioni;
 
 
-    public GestioneMacchine(Map<String, String> registroMacchina, HashMap<String,List<String>> infoRilevazioni){
-        this.registroMacchina = registroMacchina;
+
+    public GestioneFile(Map<String, String> registroNodo, HashMap<String,List<String>> infoRilevazioni){
+        this.registroNodo = registroNodo;
         this.infoRilevazioni = infoRilevazioni;
     }
 
 
 
     //metodo che serve per salvare il dato nella fase di controllo, si attiva una volta per nuova connessione
-    public synchronized void salvaMacchine(){
-        File file = new File("master/dataMacchine/macchineRegistrate.txt");
+    public synchronized void salvaNodo(){
+        File file = new File("aggregator/dataNodo/macchineRegistrate.txt");
         // Usa FileWriter per scrivere e PrintWriter per avere il metodo println()
         try (PrintWriter scrittura = new PrintWriter(new FileWriter(file))) {
-                for (Map.Entry<String, String> n : registroMacchina.entrySet()) {            
+                for (Map.Entry<String, String> n : registroNodo.entrySet()) {            
                     String nomeMacchina = n.getKey();
                     String credenziali = n.getValue();
                     scrittura.println(nomeMacchina +":"+ credenziali);
@@ -45,17 +46,17 @@ public class GestioneMacchine {
 
     //quando il server si accende fa a prendere i dati delle macchine registrate con nome -> (ip porta, stato)
     public void recuperoMacchine(){
-        File file = new File("master/dataMacchine/macchineRegistrate.txt");
+        File file = new File("aggregator/dataNodo/macchineRegistrate.txt");
         if (file.exists()) {
             try (BufferedReader letturaFile = new BufferedReader(new FileReader(file))) {
                     String riga;
                     while((riga = letturaFile.readLine())!= null){
-                        String [] macchineSalvate = riga.split(":");
-                        String chiave = macchineSalvate[0]; //nomeMacchina
-                        String valore = macchineSalvate[1]+":"+macchineSalvate[2]+":"+macchineSalvate[3] ; //ip[1] porta[2] stato[3]
-                        registroMacchina.put(chiave, valore); //salvataggio diretto
+                    String [] nodi = riga.split(":");
+                        String chiave = nodi[0]; //nomeMacchina
+                        String valore = nodi[1]+":"+nodi[2]+":"+nodi[3] ; //ip[1] porta[2] stato[3]
+                        registroNodo.put(chiave, valore); //salvataggio diretto
                     }
-            System.out.println("[BACKUP] Ripristinate " + registroMacchina.size() + " macchine.");
+            System.out.println("[BACKUP] Ripristinate " + registroNodo.size() + " macchine.");
         } catch (IOException e) {
                 System.out.println("Errore durante la lettura del file config");
             }
@@ -80,7 +81,7 @@ public class GestioneMacchine {
             listaPeerLocale.add(rigaSalvataggio);
         }
         //salvataggio nel file locale
-        File file = new File("master/dataMacchine/infoRilevazione.txt");
+        File file = new File("aggregator/dataMacchine/infoRilevazione.txt");
         try (BufferedWriter  scritturaFile = new BufferedWriter (new FileWriter(file))) {
             for(String riga : listaPeerLocale){
                 scritturaFile.write(riga);
@@ -112,7 +113,7 @@ public class GestioneMacchine {
 
         // recupero delle rilevazioni in locale
         public void recuperoDatiRilevazioni(){
-            File file = new File("master/dataMacchine/infoRilevazioni.txt");
+            File file = new File("aggregator/dataMacchine/infoRilevazioni.txt");
             if(file.exists()){
                 try (BufferedReader letturaFile = new BufferedReader(new FileReader(file))) {
 

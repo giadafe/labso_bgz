@@ -1,4 +1,4 @@
-package master;
+package aggregator;
 
 import java.util.*;
 import java.time.*;

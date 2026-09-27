@@ -1,22 +1,22 @@
-package master;
+package aggregator;
 
 import java.io.*;
 import java.net.*;
 import java.util.*;
 /*
  * ===================================
- * masterComandi
+ * aggregatorComandi
  * ===================================
- * Classe che gestisce i comandi da terminale del master
+ * Classe che gestisce i comandi da terminale del aggregator
  */
-public class masterComandi implements Runnable {
+public class aggregatorComandi implements Runnable {
     public ServerSocket ss;
     private HashMap<String, List<String>>infoRilevazioni;
     private GestoreLog gestoreLog;
     private HashMap<String,Socket>  socketClient;
-    private GestioneMacchine gestione;
+    private GestioneFile gestione;
 
-    public masterComandi(ServerSocket ss, HashMap<String, List<String>> infoRilevazioni, GestoreLog gestoreLog, HashMap<String,Socket> socketClient, GestioneMacchine gestione) {
+    public aggregatorComandi(ServerSocket ss, HashMap<String, List<String>> infoRilevazioni, GestoreLog gestoreLog, HashMap<String,Socket> socketClient, GestioneFile gestione) {
         this.ss = ss;
         this.infoRilevazioni = infoRilevazioni;
         this.gestoreLog = gestoreLog;
@@ -25,7 +25,7 @@ public class masterComandi implements Runnable {
     }
     /**
      * ==========
-     * Fase di avvio dei comandi del master
+     * Fase di avvio dei comandi del aggregator
      * ==========
      */
     @Override
@@ -76,7 +76,7 @@ public class masterComandi implements Runnable {
                  * ===========
                  * Comando quit
                  * ===========
-                 * Chiude il server master
+                 * Chiude il server aggregator
                  */
                 case "quit": 
                     System.out.println("[SERVER:] server disconnesso");
@@ -93,7 +93,7 @@ public class masterComandi implements Runnable {
                         }
                         //salvataggio in locale della tabella inforilevazioni, infomacchina e disponibilita
                         gestione.salvataggioDatiRilevazioni(infoRilevazioni);
-                        gestione.salvaMacchine();
+                        gestione.salvaNodo();
                         ss.close();
                         System.out.println("[SERVER:] Connessione chiusa.");
                         System.exit(0);

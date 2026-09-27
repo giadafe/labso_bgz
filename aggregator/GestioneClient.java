@@ -1,4 +1,4 @@
-package master;
+package aggregator;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -27,10 +27,10 @@ public class GestioneClient extends Thread {
     private String nomeMacchina = "";
     private HashMap<String, String> disponibilitaRilevazione;
     private HashMap<String, Socket> socketClient;
-    private GestioneMacchine gestione;
+    private GestioneFile gestione;
     public GestioneClient(Socket socket, BufferedReader in, PrintWriter out,
             HashMap<String, String> infoMacchinaClient, HashMap<String, List<String>> infoRilevazioni,
-            GestoreLog gestoreLog, HashMap<String, String> disponibilitaRilevazione, HashMap<String, Socket> socketClient, GestioneMacchine gestione) {
+            GestoreLog gestoreLog, HashMap<String, String> disponibilitaRilevazione, HashMap<String, Socket> socketClient, GestioneFile gestione) {
         //inizializzo variabili
         this.socket = socket;
         this.in = in;
@@ -100,7 +100,7 @@ public class GestioneClient extends Thread {
                                 socketClient.put(outnomeMacchina, socket);
 
                                 //TEST salvataggio in locale
-                                gestione.salvaMacchine();
+                                gestione.salvaNodo();
                                 System.out.println("[DATABASE] Macchina registrata con successo: " + outnomeMacchina);
                                 primoWhile = false;
                             }
@@ -130,7 +130,7 @@ public class GestioneClient extends Thread {
                         credenzialiDaAggiornare = "0.0.0.0:0";
                     }
                     infoMacchinaClient.put(outnomeMacchinaDaAggiornare, credenzialiDaAggiornare);
-                    gestione.salvaMacchine();
+                    gestione.salvaNodo();
                     synchronized(socketClient){
                         socketClient.put(outnomeMacchinaDaAggiornare, socket); // salviamo il socket del client cosi da facilitare l'operazione di quit
                     }

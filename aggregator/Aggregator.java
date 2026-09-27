@@ -1,4 +1,4 @@
-package master;
+package aggregator;
 
 import java.io.*;
 import java.net.*;
@@ -7,16 +7,16 @@ import java.util.List;
 
 /*
     * ==================
-    * Master
+    * Aggregator
     * =================
-	* Classe principale che avvia il server Master per la gestione delle risorse condivise tra i peer.	
+	* Classe principale che avvia il server aggregator per la gestione delle risorse condivise tra i peer.	
 */
 
-public class Master {
+public class Aggregator {
 	public static void main(String[] args) throws IOException {
 		if (args.length != 1) {
 			// controlla che il programma sia avviato con un solo parametro (la porta).
-			System.out.println("Scrivere a terminale: java master.Master <inserire numero della porta>, esempio: java master.Master 9000"); 
+			System.out.println("Scrivere a terminale: java aggregator.Aggregator <inserire numero della porta>, esempio: java aggregator.Aggregator 9000"); 
 			return;
 		}
 		int port;
@@ -30,7 +30,7 @@ public class Master {
 		//risorse condivise traq i thread.
 		// creazione di un hashmap per la gestione dei socket 
 		HashMap<String, Socket> socketClient = new HashMap<>(); // nomeMacchina > socket
-		//creazione di  un hashmap risorsa disponobilita 
+		//creazione di  un hashmap risorsa disponibilita 
 		HashMap<String, String> disponibilitaRilevazione = new HashMap<>(); // nomeRisorsa > DISPONIBILE | OCCUPATO
 		//creazione di una hasmap per salvare il nome della macchina, ip e porta
 		HashMap<String, String> infoMacchinaClient = new HashMap<>(); // nomeMacchina > ip, porta, online | offline
@@ -44,13 +44,13 @@ public class Master {
 		System.out.println("ServerSocket in ascolto sulla porta " + port + "...");
 
 		////////////////////////////
-		GestioneMacchine gestione = new GestioneMacchine(infoMacchinaClient, infoRilevazioni);
+		GestioneFile gestione = new GestioneFile(infoMacchinaClient, infoRilevazioni);
 		gestione.recuperoDatiRilevazioni();
 		gestione.recuperoMacchine();
 
-		// Fase di avvio del thread per la gestione dei comandi del Master
-		Thread masterComandi = new Thread(new masterComandi(ss, infoRilevazioni, gestoreLog, socketClient, gestione));
-		masterComandi.start();
+		// Fase di avvio del thread per la gestione dei comandi del aggregator
+		Thread aggregatorComandi = new Thread(new aggregatorComandi(ss, infoRilevazioni, gestoreLog, socketClient, gestione));
+		aggregatorComandi.start();
 
 		//Fase di accettazione delle connessioni in ingresso dai client peer
 		try {
@@ -58,7 +58,7 @@ public class Master {
 				Socket socket = ss.accept(); // accetta una connessione in ingresso
 				System.out.println("Client connesso!");
 
-				// preparazione dei BufferedReader e BufferedWriter per permettere al Master di leggere e
+				// preparazione dei BufferedReader e BufferedWriter per permettere al aggregator di leggere e
 				BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
 				

@@ -44,7 +44,7 @@ public class ServerRilevazioni extends Thread {
                 }
             }
           }catch(IOException e){
-               System.out.println("Errore di appertura del server" );
+            System.out.println("\u001B[31m[CLIENT] Errore apertura del server \u001B[0m");            
                e.setStackTrace(getStackTrace());
             }
         }

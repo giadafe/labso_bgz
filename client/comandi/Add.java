@@ -52,10 +52,9 @@ public class Add {
                 boolean controllo = creazione.creazioneFile(nomeRilevazione, contenutoCrittografato);
 
                 if (!controllo) {
-                    System.err.println("Errrore nella creazione del file");
-                } else {
+                    System.err.println("\u001B[31m[CLIENT] Errore nella creazione del file\u001B[0m");                
+                    } else {
                     //inserire i dati nelle liste 
-                    System.out.println(" Generazione del token per mascherare la chiave di sblocco AES");
                     AssegnaToken nuovoToken = new AssegnaToken();
                     String token = nuovoToken.generaTokenCasuale();
                     Boolean checkToken = true;
@@ -64,7 +63,6 @@ public class Add {
                     while(checkToken){
                         tokenValidato = nuovoToken.aggiungiToken(token, tokenSblocco ).trim();
                         if(tokenValidato.equals("TOKEN_ESISTENTE")){
-                            System.out.println("Token esistente, inserisci un nuovo token");
                             token = nuovoToken.generaTokenCasuale();
                         }else{
                             //aggiorno la tabella dei token cosi  da non renderlo riconoscibile 
@@ -85,20 +83,19 @@ public class Add {
                     try {
                         responseAggregator = inServer.readLine();
                         if(responseAggregator.equals("RILEVAZIONE_AGGIUNTA")){
-                            System.out.println("Rilevazione aggiunta correttamente");
+                            System.out.println("\u001B[32m[CLIENT] Rilevazione aggiunta correttamente\u001B[0m");                        
                         }   
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
                 }
             } else {
-                System.err.println("Errore nella fase di crittografia");
+                    System.err.println("\u001B[31m[CLIENT] Errore nella fase di crittografia\u001B[0m");                
             }
 
         } else {
             // Caso rilevazione duplicata
-            System.out.println("Questa rilevazione esiste gia");
-            
+            System.out.println("\u001B[33m [CLIENT] Rilevazione duplicata\u001B[0m");            
             outServer.println("Rilevazione gia presente");
         }
     }

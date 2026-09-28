@@ -44,7 +44,7 @@ public class ThreadSmistamentoRichieste extends Thread {
                         listaSocekt.wait(); 
                         statoLista = false;  
                     } catch (InterruptedException e) {
-                        System.out.println("Errore nella fase di caricamento dell'elemento in lista");
+                        System.out.println("\u001B[31m[CLIENT] Errore nel caricamento della lista\u001B[0m");            
                     }
                 } else {
                     statoLista = true;
@@ -78,7 +78,7 @@ public class ThreadSmistamentoRichieste extends Thread {
                     }
 
                 } catch (Exception e) {
-                    System.out.println("Errore nello smistamento");
+                    System.out.println("\u001B[31m[[CLIENT PEER TO PEER] ] Errorenello smistamento \u001B[0m");            
                 }
             }
         }

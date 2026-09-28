@@ -9,6 +9,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * SalvaggioDati
+ * Classe centrale che si occupa di gestire i salvataggi del 
+ * nome della macchina/nodo,
+ * rilevazioni > Token
+ * Token > chiave decriptazione negli appositi file 
+ * Quando e richiesto.
+ */
+
 public class SalvaggioDati {
     //salvataggio del nome del nodo/macchina ]
 
@@ -22,20 +31,20 @@ public class SalvaggioDati {
         try {
             if (!directory.exists()) {
                 if (directory.mkdirs()) {
-                    System.out.println("Cartella 'rilevazioni' creata.");
+                    System.out.println("\u001B[32m[CLIENT] Cartella 'rilevazioni' creata.\u001B[0m");
                 } else {
-                    System.out.println("Impossibile creare la cartella.");
+                    System.out.println("\u001B[31m[CLIENT] Impossibile creare la cartella.\u001B[0m");
                     return; 
                 }
             }
             try (PrintWriter out = new PrintWriter(new FileWriter(file))) {
                 out.print(nomeMacchina);
                 out.flush(); 
-                System.out.println("Nome '" + nomeMacchina + "' salvato con successo in: " + file.getPath());
+                System.out.println( "\u001B[32m[CLIENT] Nome del nodo salvato correttamente \u001B[0m");            
             }
 
         } catch (IOException e) {
-            System.out.println("Errore durante l'accesso al file: " + e.getMessage());
+            System.out.println("\u001B[31m[CLIENT] Errore di accesso al file \u001B[0m");       
         }
     }
 
@@ -48,6 +57,7 @@ public class SalvaggioDati {
     //salvataggio delle rilevazioni in locale
     public void salvataggioDatiRilevazioni(Map<String,String> datiRilevazione){ //nome > token
         List<String> stringheSalvataggio = new ArrayList<>();
+
         synchronized(datiRilevazione){
             for(String k : datiRilevazione.keySet()){
                 String valore = datiRilevazione.get(k);
@@ -61,8 +71,9 @@ public class SalvaggioDati {
                     writer.write(riga);
                     writer.newLine();
                 }
+                System.out.println( "\u001B[32m[CLIENT] Salvataggio delle rilevazioni avvenuto con successo \u001B[0m");            
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("\u001B[31m[CLIENT] Errore di salvataggio \u001B[0m");       
             }
         }
     }
@@ -89,8 +100,9 @@ public class SalvaggioDati {
                     writer.write(riga);
                     writer.newLine();
                 }
+                System.out.println( "\u001B[32m[CLIENT] Salvataggio dei token avvenuto con successo \u001B[0m");            
             } catch (IOException e) {
-                e.printStackTrace();
+                System.out.println("\u001B[31m[CLIENT] Errore di salvataggio \u001B[0m");       
             }
         }
     }

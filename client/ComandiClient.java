@@ -13,6 +13,12 @@ import java.net.Socket;
 import java.util.Map;
 import java.util.Scanner;
 
+/**
+ * 
+ * ComandiClient
+ * Classe che si occupa dello scambio di risorse e aggiornamento delle credenziali in caso di indirizzi ip dinamici
+ * permette la comunicazione con il Client/Nodo all'Aggregator
+ */
 
 public class ComandiClient extends Thread {
 
@@ -49,64 +55,54 @@ public class ComandiClient extends Thread {
     @Override
     public void run(){
         InvioRilevazioni inviaDati = new InvioRilevazioni();
-        System.out.println("Comandi avviati");
-        //mandare la lista  delle sue riprese da un file di testo
-
-    while(primowhile){
+        System.out.println("\u001B[32m[CLIENT] Comandi avviati\u001B[0m");        
+        while(primowhile){
             //mando lo stato della macchina 
             System.out.println(nomeMacchina);
             try {
                 if(stato.equals("NUOVA_MACCHINA")){
-                    System.out.println("[DEBUG] Stato: NUOVA_MACCHINA. Invio stato e nome: " + nomeMacchina);
                     outServer.println(stato);
                     outServer.println(nomeMacchina);
                     
-                    System.out.println("[DEBUG] In attesa di risposta dall'Aggregator...");
                     String responseAggregator = inServer.readLine();
-                    System.out.println("[DEBUG] Risposta ricevuta: " + responseAggregator);
                     
                     if(responseAggregator.equals("nomeMacchina_DUPLICATO")){
-                        System.out.println("[ATTENZIONE] Nome duplicato! Inserire un nuovo nome nel terminale:");
+                        System.out.println("\u001B[33m[CLIENT] Nome duplicato, inserire un nuovo nome:\u001B[0m");                        
                         //reinserisci il nome
                         nomeMacchina = sc.nextLine();
-                        System.out.println("[DEBUG] Nuovo nome inserito: " + nomeMacchina + ". Riprovo registrazione...");
                     }else if(responseAggregator.equals("nomeMacchina_VALIDA")){
-                        System.out.println("[OK] Nome valido. Invio credenziali: " + ip + " " + porta);
                         outServer.println(ip +" "+porta);
-
-                        System.out.println("[DEBUG] Registrazione completata con successo.");
+                        System.out.println("\u001B[32m[CLIENT] Registrazione avvenuta con successo\u001B[0m");
 
                         primowhile = false;
                         secondowhile = true;
                     }
                     
                 }else if(stato.equals("MACCHINA_ESISTENTE")){
-                    System.out.println("[DEBUG] Stato: MACCHINA_ESISTENTE. Invio aggiornamento dati per: " + nomeMacchina);
                     outServer.println(stato);
                     outServer.println(nomeMacchina);
                     outServer.println(ip +" "+ String.valueOf(porta));   //aggiornamento ip porta per IP dinamici             
                     primowhile = false;
-                    System.out.println("[DEBUG] Dati aggiornati sul server.");
+                    System.out.println("\u001B[32m[CLIENT] Aggiornamento delle credenziali avvenuta correttamente\u001B[0m");
                     secondowhile = true;
                 }
             } catch (IOException e) {
-                System.err.println("[ERRORE] Problema di comunicazione durante il ciclo primowhile:");
+                System.err.println("\u001B[31m[CLIENT] Errore nella fase di aggiornamento \u001B[0m");                
                 //chiusura del socket
                 chiusura.chiusuraConnessioneThreadComando(socket,primowhile,secondowhile);
             }
         }
 
-        System.out.println("[CLIENT] Fase di registrazione conclusa, pronto per mandare i dati");
+        System.out.println("\u001B[32m[CLIENT] Fase di registrazione conclusa, pronto per mandare i dati\u001B[0m");        
         String start;
         try {
             start = inServer.readLine();
             if(!"inizio_fase_rilevazioni".equals(start)) {
-                System.out.println("Protocollo desincronizzato");
-            return;
-        }
+                System.out.println("\u001B[31m[CLIENT]Errore di desincronizzaione\u001B[0m");            
+                return;
+            }
         } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+                System.out.println("\u001B[31m[CLIENT]Errore di desincronizzaione\u001B[0m");            
         }
 
         //serve per mandare i dati della rilevazione al master sfruttando la calsse che ha creato blerta
@@ -124,8 +120,17 @@ public class ComandiClient extends Thread {
 
         //comandi
         while(secondowhile){
-            System.out.println("[COMANDI] Comandi attivi");
+            System.out.println("\u001B[32m[COMANDI] Comandi attivi\u001B[0m");
+            System.out.println("Inserisci i comandi:");
+            System.out.println("> listdata local");
+            System.out.println("> listdata remote");
+            System.out.println("> download");
+            System.out.println("> quit");
+
+
+
             String comando = sc.nextLine();
+
             if(comando.contains("listdata local")){
                 //accedere alle registrazioniu locali
                     listDataLocal listalocale = new listDataLocal();
@@ -167,7 +172,7 @@ public class ComandiClient extends Thread {
                 //aggiungere nome registrazione + valore tutto in String
                 String scomposizioneComando [] = comando.split(" ",3);// salvo in blocchi di 3 le stringhe 
                 if(scomposizioneComando.length != 3){
-                    System.out.println("comando inserito sbagliato");
+                    System.out.println("\u001B[31m[CLIENT] comando errato\u001B[0m");                    
                     continue;
                 }else{
                     Add addRilevazioni = new Add(scomposizioneComando,inServer,outServer, datiRilevazione, sc, tokenSblocco); //aggiugnere le liste
@@ -178,6 +183,10 @@ public class ComandiClient extends Thread {
                 String scomposizioneComando [] = comando.split(" ",2);
                 String comandoScelto = scomposizioneComando[0];
                 String nomeFile = scomposizioneComando[1];
+                if (datiRilevazione.containsKey(nomeFile)) {
+                    System.out.println("\u001B[31m[CLIENT] rilevazione '" + nomeFile + "' esiste gia in locale.\u001B[0m");
+                    continue;
+                }
                 Download downloadRisorsa = new Download();
                 downloadRisorsa.scarica(nomeFile, outServer, inServer, comandoScelto, datiRilevazione, tokenSblocco, sc);
 

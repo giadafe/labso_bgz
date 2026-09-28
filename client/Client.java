@@ -4,11 +4,17 @@ import java.net.*;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
-//recarsi nella cartella src e lanciare il comando:
-// javac Client.java
-// poi per eseguire il client:
-// java Client 
-// mi raccomando: avviare prima il server (Master) in un'altra finestra del terminale.
+
+
+/**
+ * Client
+ * Classe main che permette l'esecuzione del client/Nodo
+ * 
+ * Questa classe ha la responsabilita di inizializzare le liste di rilevazioni token controllare l'esistenza o meno di cartelle importanti 
+ * Si occupa di avviare i thread dei comandi e il trhead che funge da Server per ascoltare le richieste di download.
+ */
+
+
 public class Client {
     public static void main(String[] args) {
 
@@ -23,7 +29,6 @@ public class Client {
         controlloDirectory.controlloDirectoryRilevazioni();
 
         //creazione struttura dati condivisa thread safe
-
         Map<String,String> datiRilevazione  = new ConcurrentHashMap<>();//NOMEFILE > TOKEN
         Map<String,String> tokenSblocco  = new ConcurrentHashMap<>();//TOKEN > CHIAVE DECRITTAZIONE
         RecuperoDatiRilevazioni recuperoRilevazioni = new RecuperoDatiRilevazioni(datiRilevazione,tokenSblocco);
@@ -52,9 +57,8 @@ public class Client {
         //recupero indirizzo IP
         try {
             ip = InetAddress.getLocalHost().getHostAddress();
-            System.out.println("Il mio IP: " + ip);
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            System.err.println("\u001B[31m[CLIENT] Impossibile recuperare l'inidrizzo ip\u001B[0m");
         }
 
 
@@ -63,41 +67,42 @@ public class Client {
         try {
             ss = new ServerSocket(0);
             portaServerRilevazione = ss.getLocalPort();
-            System.out.println("Porta generata random: "+ portaServerRilevazione);
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("\u001B[31m[CLIENT] Errore nell'apertura del server per stabilire connessioni peer to peer\u001B[0m");
+            return;
         }
             
         try {
             socket = new Socket(ipAggregator, portaAggregator);
-            System.out.println("Connesso! Ora puoi inviare messaggi al master");
-
+            System.out.println("\u001B[32m[CLIENT] connessione stabilita con l'Aggregator\u001B[0m");
             //fase di controllo
             if(controlloNome.isEmpty()){
-                System.out.println("Inserisci il nome della macchina");
+                System.out.println("[CLIENT]: Inserisci il nome della macchina");
                 nomeMacchina= sc.nextLine();
                 stato = "NUOVA_MACCHINA";
                 salvataggio.salvataggio(nomeMacchina);//salvo il nome della macchina in locale
             }else{
                 stato = "MACCHINA_ESISTENTE";
                 nomeMacchina = controlloNome;
-                System.out.println("Nome della macchina esistente" + stato);
+                //System.out.println("Nome della macchina esistente" + stato);
             }
             
             //creazione buffer reader e writer
             BufferedReader inServer = new BufferedReader( new InputStreamReader(socket.getInputStream()));
             PrintWriter outServer = new PrintWriter(socket.getOutputStream(),true);
-            System.out.println("Sei connesso al master");
+            System.out.println("\u001B[32m[CLIENT] Macchina/nodo pronto all'esecuzione dei comandi \u001B[0m");
 
-            //avvio del thread dei comandi
+            //avvio del thread dei comandi per comunicare le azioni all'Aggregator
             ComandiClient comandi = new ComandiClient(inServer, outServer, nomeMacchina, sc, stato, ip, portaServerRilevazione, chiusura, socket, datiRilevazione, tokenSblocco, salvataggio);
             comandi.start();
+
+
             //avvio del server per effettuare la connessione P2P
             ServerRilevazioni serverRilevazioni = new ServerRilevazioni(ss,portaAggregator,inServer,outServer, datiRilevazione, tokenSblocco);
             serverRilevazioni.start();
 
         } catch (IOException e) {
-            System.err.println("impossibile connettersi al master all'indirizzo porta o indirizzo sbagliato");
+            System.out.println("\u001B[31m[CLIENT] Impossibile stabilire una connessione con l'aggregator, indirizzo ip o porta errata\u001B[0m");            
             chiusura.chiusuraMain(socket);
         }
     }

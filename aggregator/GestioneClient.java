@@ -392,7 +392,7 @@ public class GestioneClient extends Thread {
                         if(infoMacchinaClient.containsKey(this.nomeMacchina)){
                             String nodo = infoMacchinaClient.get(this.nomeMacchina);
                             String [] scomposizioneNodo = nodo.split(":");
-                            String statoModificato = scomposizioneNodo[0] + scomposizioneNodo[1] + "OFFLINE";
+                            String statoModificato = scomposizioneNodo[0] + ":" + scomposizioneNodo[1] + ":OFFLINE";
                             infoMacchinaClient.put(this.nomeMacchina, statoModificato);
                         }
                     }
@@ -410,7 +410,7 @@ public class GestioneClient extends Thread {
                 }
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Client disconnesso");
         }
     }
 

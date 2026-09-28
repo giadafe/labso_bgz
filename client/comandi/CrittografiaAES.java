@@ -15,8 +15,6 @@ public class CrittografiaAES {
             KeyGenerator generatoreChiave = KeyGenerator.getInstance("AES");
             generatoreChiave.init(256);
             SecretKey chiave = generatoreChiave.generateKey();
-            System.out.println(" Chiave generata con successo!");
-
             //Inizializzazione della crittografia con la chiave
             Cipher cipherText = Cipher.getInstance("AES");
             cipherText.init(Cipher.ENCRYPT_MODE, chiave);
@@ -28,15 +26,11 @@ public class CrittografiaAES {
             // conversione in base64 per la lettura 
             String contenutoCrittografato = Base64.getEncoder().encodeToString(cipherTextBytes);
             String chiaveBase64 = Base64.getEncoder().encodeToString(chiave.getEncoded());
-            System.out.println("Crittografia completata");
-
+            System.out.println("\u001B[32m[CLIENT] Crittografia completata\u001B[0m");
             return new String[]{contenutoCrittografato, chiaveBase64};
 
         } catch (Exception e) {
-            System.err.println("Errore nella fase di crittografia");
-            e.printStackTrace();
-            System.out.println("Crittografia fallita");
-            
+            System.err.println("\u001B[31m[CLIENT] Errore nella fase di crittografia: " + e.getMessage() + "  Crittografia fallita\u001B[0m");            
             return new String[]{"", ""};
         }
     }

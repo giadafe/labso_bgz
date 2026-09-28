@@ -88,7 +88,7 @@ public class serveClient {
                     socketClient.close();
                 }
             } catch (Exception e) {
-                System.out.println("Errore durante la chiusura del socket");
+                System.out.println("\u001B[31m[CLIENT PEER TO PEER] Errore nella chiusura del socket \u001B[0m");            
             }
         }
     }

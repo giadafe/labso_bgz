@@ -28,7 +28,7 @@ public class ListDataRemote {
             }
         } catch (IOException e) {
             // Gestione errore se il server si disconnette
-            System.err.println(" Problema con il server durante la listdata remote");
+            System.err.println("\u001B[31m[CLIENT] Problema di comunicazione con l'Aggregator\u001B[0m");            
             //disconnessione 
         }
     }

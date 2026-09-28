@@ -64,24 +64,26 @@ public class GestioneFile {
     }
 
 
-
-
-
-
-
-
-
     //salvataggio della hashmap in locale delle rilevazioni
     public synchronized void salvataggioDatiRilevazioni(HashMap<String,List<String>> infoRilevazioni){
         List<String> listaPeerLocale = new ArrayList<>();
         for(String chiave : infoRilevazioni.keySet()){
             //recupero la lista di peer associati
             List<String> listaPeer = infoRilevazioni.get(chiave);
-            String rigaSalvataggio = chiave + "|" + String.join("|", listaPeer);
+            if (listaPeer == null) {
+                continue;
+            }
+            List<String> peerUnici = new ArrayList<>();
+            for (String peer : listaPeer) {
+                if (!peerUnici.contains(peer)) {
+                    peerUnici.add(peer);
+                }
+            }
+            String rigaSalvataggio = chiave + "|" + String.join("|", peerUnici);
             listaPeerLocale.add(rigaSalvataggio);
         }
         //salvataggio nel file locale
-        File file = new File("aggregator/dataMacchine/infoRilevazione.txt");
+        File file = new File("aggregator/dataNodo/infoRilevazione.txt");
         try (BufferedWriter  scritturaFile = new BufferedWriter (new FileWriter(file))) {
             for(String riga : listaPeerLocale){
                 scritturaFile.write(riga);
@@ -113,7 +115,7 @@ public class GestioneFile {
 
         // recupero delle rilevazioni in locale
         public void recuperoDatiRilevazioni(){
-            File file = new File("aggregator/dataMacchine/infoRilevazioni.txt");
+            File file = new File("aggregator/dataNodo/infoRilevazioni.txt");
             if(file.exists()){
                 try (BufferedReader letturaFile = new BufferedReader(new FileReader(file))) {
 

@@ -30,7 +30,7 @@ public class DecrittazioneAES {
             return contenutoDecrittato; 
 
         } catch (Exception e) {
-            System.out.println("Errore durante la decrittazione: " + e.getMessage());
+            System.out.println("\u001B[31m[CLIENT PEER TO PEER] Errore durante la decrittazione: " + e.getMessage() + "\u001B[0m");            
             return null;
         }
     }

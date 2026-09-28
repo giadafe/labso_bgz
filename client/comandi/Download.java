@@ -16,7 +16,7 @@ public class Download {
             String risposta = inServer.readLine();
             Boolean controllo = false;
             if(risposta.equals("RILEVAZIONE_NON_TROVATA")){
-                System.out.println("Non esiste questa rilevazione");
+                System.out.println("\u001B[31m[CLIENT] Non esiste questa rilevazione\u001B[0m");                
                 return;
             }else{
                 controllo = true;
@@ -38,7 +38,7 @@ public class Download {
                 threadDownload.start();
             }
         }catch(IOException e){
-            System.out.println("Errore nella ricezione della risposta del server");
+                System.out.println("\u001B[31m[CLIENT] Errore nella ricezione della risposta del server\u001B[0m");        
         }
     }
 }

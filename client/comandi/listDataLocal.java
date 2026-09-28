@@ -16,7 +16,7 @@ public class listDataLocal {
             if(responseServer.equals("accesso_lista_local")){
                 permesso = true;
             }else{
-                System.out.println("permesso negato");
+                System.out.println("\u001B[31m[CLIENT]  permesso negato\u001B[0m");           
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -31,9 +31,8 @@ public class listDataLocal {
                     System.out.println("- " + n);
                 }
             }else{
-                System.out.println("Non ci sono risorse");
+                System.out.println("[CLIENT] Non hai rilevazioni da mostrare");
             }
-
         }
 
 

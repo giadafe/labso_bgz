@@ -24,7 +24,7 @@ public class DownloadServiceSender {
                 outStream.flush();
             }
             socketClient.shutdownOutput();
-            System.out.println("File inviato con successo!");
+            System.out.println("\u001B[32m[CLIENT PEER TO PEER]  File inviato con successo!\u001B[0m");        
         } catch (IOException e) {
             System.err.println("Errore durante l'invio del file: " + e.getMessage());
         }
